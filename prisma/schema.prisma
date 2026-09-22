@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String
+  name             String
+  role             String    @default("member")
+  stripeCustomerId String?
+  stripeSubId      String?
+  subStatus        String?
+  scansToday       Int       @default(0)
+  scansDate        String?
+  createdAt        DateTime  @default(now())
+  recipes          Recipe[]
+  foodLogs         FoodLog[]
+  favorites        Favorite[]
+  quizResults      QuizResult[]
+}
+
+model Recipe {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  title       String
+  source      String
+  status      String
+  authorId    String?
+  author      User?      @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  summary     String
+  category    String
+  timeMinutes Int
+  difficulty  String
+  servings    Int
+  ingredients String
+  steps       String
+  nutrients   String
+  imageHint   String
+  veganScore  Int        @default(5)
+  veganWhy    String
+  glutenFree  Boolean    @default(false)
+  rejectReason String?
+  createdAt   DateTime   @default(now())
+  favorites   Favorite[]
+}
+
+model FoodLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date       String
+  kind       String
+  label      String
+  barcode    String?
+  nutrients  String
+  veganScore Int
+  veganWhy   String
+  createdAt  DateTime @default(now())
+}
+
+model Favorite {
+  userId   String
+  recipeId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, recipeId])
+}
+
+model QuizResult {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String
+  score     Int
+  total     Int
+  createdAt DateTime @default(now())
+}
