@@ -55,6 +55,17 @@ function lineHasAny(normalized: string, words: string[]): boolean {
   return words.some((w) => normalized.includes(normalizeText(w)));
 }
 
+function escapeReg(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Whole-token match so "silk" does not hit "silicone". */
+export function hasTerm(normalized: string, pattern: string): boolean {
+  const p = escapeReg(normalizeText(pattern).trim());
+  if (!p) return false;
+  return new RegExp(`(^|[^a-z0-9])${p}(s|x)?([^a-z0-9]|$)`).test(normalized);
+}
+
 function findRule(normalized: string): TermRule | undefined {
   return TERM_RULES.find((rule) => {
     const heads = [rule.head, ...(rule.aliases ?? [])].map(normalizeText);
@@ -78,7 +89,7 @@ export function analyzeIngredientLine(line: string): IngredientHit {
   const normalized = normalizeText(original);
 
   for (const term of CERTAIN_ANIMAL_TERMS) {
-    if (normalized.includes(normalizeText(term.pattern))) {
+    if (hasTerm(normalized, term.pattern)) {
       const plantOverride =
         (term.pattern === "oeuf" || term.pattern === "oeufs") &&
         (normalized.includes("vegetal") || normalized.includes("vegan") || normalized.includes("remplac"));

@@ -67,3 +67,40 @@ export async function cameraPermissionState(): Promise<PermissionState | "unknow
     return "unknown";
   }
 }
+
+type TorchTrack = MediaStreamTrack & {
+  getCapabilities?: () => { torch?: boolean };
+};
+
+function videoTrack(stream: MediaStream | null): TorchTrack | null {
+  return (stream?.getVideoTracks()[0] as TorchTrack | undefined) ?? null;
+}
+
+export function torchSupported(stream: MediaStream | null): boolean {
+  const track = videoTrack(stream);
+  if (!track?.getCapabilities) return false;
+  try {
+    return Boolean(track.getCapabilities().torch);
+  } catch {
+    return false;
+  }
+}
+
+export async function setTorch(stream: MediaStream | null, on: boolean): Promise<boolean> {
+  const track = videoTrack(stream);
+  if (!track) return false;
+  try {
+    await track.applyConstraints({
+      advanced: [{ torch: on } as MediaTrackConstraintSet],
+    });
+    return true;
+  } catch {
+    try {
+      await track.applyConstraints({ torch: on } as MediaTrackConstraints);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+

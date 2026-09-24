@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { OFFICIAL_RECIPES } from "../data/official-recipes";
+import { RECIPE_COVERS } from "../data/recipe-covers";
+import { recipeServe } from "../data/recipe-serve";
 
 const prisma = new PrismaClient();
 
@@ -10,10 +12,13 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: "admin@vitavegan.app" },
-    update: { role: "admin", passwordHash: adminHash, name: "Admin" },
+    update: { role: "admin", passwordHash: adminHash, name: "Admin Vita", firstName: "Admin", lastName: "Vita" },
     create: {
       email: "admin@vitavegan.app",
-      name: "Admin",
+      name: "Admin Vita",
+      firstName: "Admin",
+      lastName: "Vita",
+      birthDate: "1990-01-01",
       passwordHash: adminHash,
       role: "admin",
     },
@@ -21,16 +26,29 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: "demo@vitavegan.app" },
-    update: { role: "member", passwordHash: demoHash, name: "Démo" },
+    update: {
+      role: "member",
+      passwordHash: demoHash,
+      name: "Démo Vita",
+      firstName: "Démo",
+      lastName: "Vita",
+      birthDate: "1995-06-15",
+      trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
     create: {
       email: "demo@vitavegan.app",
-      name: "Démo",
+      name: "Démo Vita",
+      firstName: "Démo",
+      lastName: "Vita",
+      birthDate: "1995-06-15",
       passwordHash: demoHash,
       role: "member",
+      trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     },
   });
 
   for (const r of OFFICIAL_RECIPES) {
+    const serve = recipeServe(r.slug, r.category);
     await prisma.recipe.upsert({
       where: { slug: r.slug },
       update: {
@@ -49,6 +67,9 @@ async function main() {
         veganWhy: r.veganWhy,
         source: "official",
         status: "published",
+        image: RECIPE_COVERS[r.slug] ?? "",
+        gear: JSON.stringify(serve.gear),
+        tasting: JSON.stringify(serve.tasting),
       },
       create: {
         slug: r.slug,
@@ -60,6 +81,7 @@ async function main() {
         servings: r.servings,
         glutenFree: r.glutenFree,
         imageHint: r.imageHint,
+        image: RECIPE_COVERS[r.slug] ?? "",
         ingredients: JSON.stringify(r.ingredients),
         steps: JSON.stringify(r.steps),
         nutrients: JSON.stringify(r.nutrients),
@@ -67,6 +89,8 @@ async function main() {
         veganWhy: r.veganWhy,
         source: "official",
         status: "published",
+        gear: JSON.stringify(serve.gear),
+        tasting: JSON.stringify(serve.tasting),
       },
     });
   }

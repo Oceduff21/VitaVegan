@@ -2,6 +2,7 @@
 
 import type { IngredientHit } from "@/lib/vegan/analyze";
 import type { DisambiguationOption } from "@/data/vegan-terms";
+import { useI18n } from "@/components/i18n/LanguageProvider";
 
 type Props = {
   hits: IngredientHit[];
@@ -9,16 +10,15 @@ type Props = {
 };
 
 export function DisambiguateIngredient({ hits, onChoose }: Props) {
+  const { t } = useI18n();
   const ambiguous = hits.filter((h) => h.verdict === "ambigu" && h.options?.length);
 
   if (ambiguous.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-rabbit/40 bg-white p-4">
-      <p className="display text-xl">On a besoin d&apos;une précision</p>
-      <p className="text-sm text-ink/70">
-        Un mot comme « lait » ou « steak » ne suffit pas. Choisis l&apos;origine pour chaque ligne.
-      </p>
+    <div className="anim-wiggle flex flex-col gap-4 rounded-2xl border border-rabbit/40 bg-white p-4">
+      <p className="display text-xl">{t("disamb.title")}</p>
+      <p className="text-sm text-ink/70">{t("disamb.lead")}</p>
       {ambiguous.map((hit) => (
         <div key={hit.original} className="border-t border-sand pt-3">
           <p className="mb-2 text-sm">
@@ -31,7 +31,7 @@ export function DisambiguateIngredient({ hits, onChoose }: Props) {
                 key={opt.id}
                 type="button"
                 onClick={() => onChoose(hit.original, opt)}
-                className={`rounded-full border px-3 py-1.5 text-sm ${
+                className={`min-h-11 rounded-full border px-3 py-2 text-sm ${
                   opt.verdict === "animal_certain"
                     ? "border-cow/40 hover:bg-cow/10"
                     : opt.verdict === "ambigu"

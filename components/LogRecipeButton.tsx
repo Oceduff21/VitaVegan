@@ -1,24 +1,28 @@
 "use client";
 
 import { useState } from "react";
+import { useI18n } from "@/components/i18n/LanguageProvider";
 
 export function LogRecipeButton({
+  slug,
   label,
   nutrients,
   veganScore,
   veganWhy,
 }: {
+  slug: string;
   label: string;
   nutrients: string;
   veganScore: number;
   veganWhy: string;
 }) {
+  const { t } = useI18n();
   const [ok, setOk] = useState(false);
   return (
     <div>
       <button
         type="button"
-        className="rounded-full bg-cat px-4 py-2"
+        className="btn btn-accent w-full"
         onClick={async () => {
           await fetch("/api/food-log", {
             method: "POST",
@@ -26,6 +30,7 @@ export function LogRecipeButton({
             body: JSON.stringify({
               kind: "recipe",
               label,
+              barcode: slug,
               nutrients: JSON.parse(nutrients || "{}"),
               veganScore,
               veganWhy,
@@ -34,9 +39,9 @@ export function LogRecipeButton({
           setOk(true);
         }}
       >
-        Cuisiner cette recette (remplit les jauges)
+        {t("recipes.cook")}
       </button>
-      {ok ? <p className="mt-2 text-leaf">Ajouté au dashboard du jour.</p> : null}
+      {ok ? <p className="mt-2 text-leaf">{t("recipes.cookOk")}</p> : null}
     </div>
   );
 }

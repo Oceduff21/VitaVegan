@@ -10,19 +10,29 @@ datasource db {
 model User {
   id               String    @id @default(cuid())
   email            String    @unique
-  passwordHash     String
+  passwordHash     String    @default("")
   name             String
+  firstName        String    @default("")
+  lastName         String    @default("")
+  birthDate        String    @default("")
+  prefs            String    @default("{}")
   role             String    @default("member")
   stripeCustomerId String?
   stripeSubId      String?
   subStatus        String?
   scansToday       Int       @default(0)
   scansDate        String?
+  trialEndsAt      DateTime?
   createdAt        DateTime  @default(now())
   recipes          Recipe[]
   foodLogs         FoodLog[]
   favorites        Favorite[]
+  recipeReviews    RecipeReview[]
   quizResults      QuizResult[]
+  scanEvents       ScanEvent[]
+  productFavs      ProductFav[]
+  shoppingItems    ShoppingItem[]
+  reports          Report[]
 }
 
 model Recipe {
@@ -42,12 +52,30 @@ model Recipe {
   steps       String
   nutrients   String
   imageHint   String
+  image       String     @default("")
   veganScore  Int        @default(5)
   veganWhy    String
   glutenFree  Boolean    @default(false)
   rejectReason String?
-  createdAt   DateTime   @default(now())
-  favorites   Favorite[]
+  gear         String    @default("[]")
+  tasting      String    @default("{}")
+  createdAt    DateTime  @default(now())
+  favorites    Favorite[]
+  reviews      RecipeReview[]
+}
+
+model RecipeReview {
+  id        String   @id @default(cuid())
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([recipeId, userId])
 }
 
 model FoodLog {
@@ -73,6 +101,29 @@ model Favorite {
   @@id([userId, recipeId])
 }
 
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model CatalogProduct {
+  id               String   @id @default(cuid())
+  kind             String   @default("food")
+  barcode          String   @default("")
+  name             String
+  brand            String   @default("")
+  image            String   @default("")
+  ingredientsText  String   @default("")
+  veganScore       Int      @default(3)
+  veganWhy         String   @default("")
+  cruelty          String   @default("unknown")
+  authorId         String?
+  createdAt        DateTime @default(now())
+}
+
 model QuizResult {
   id        String   @id @default(cuid())
   userId    String
@@ -80,5 +131,58 @@ model QuizResult {
   date      String
   score     Int
   total     Int
+  createdAt DateTime @default(now())
+}
+
+model ScanEvent {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind       String   @default("food")
+  barcode    String   @default("")
+  name       String
+  brand      String   @default("")
+  image      String   @default("")
+  veganScore Int      @default(3)
+  veganWhy   String   @default("")
+  cruelty    String   @default("")
+  ecoGrade   String   @default("")
+  palmOil    String   @default("unknown")
+  origin     String   @default("")
+  createdAt  DateTime @default(now())
+}
+
+model ProductFav {
+  userId     String
+  kind       String
+  barcode    String
+  name       String   @default("")
+  image      String   @default("")
+  veganScore Int      @default(0)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, kind, barcode])
+}
+
+model ShoppingItem {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text       String
+  recipeSlug String   @default("")
+  inFridge   Boolean  @default(false)
+  done       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  kind      String
+  barcode   String   @default("")
+  target    String   @default("")
+  message   String
+  status    String   @default("pending")
   createdAt DateTime @default(now())
 }

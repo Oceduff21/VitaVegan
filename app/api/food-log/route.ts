@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { remainingScans } from "@/lib/billing";
+import { isPremium } from "@/lib/entitlements";
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -10,11 +11,11 @@ function today() {
 export async function GET() {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ remaining: 3, used: 0 });
+    return NextResponse.json({ remaining: 5, used: 0 });
   }
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ remaining: 0 }, { status: 404 });
-  const rem = remainingScans(user.role, user.scansToday, user.scansDate);
+  const rem = remainingScans(user.role, user.scansToday, user.scansDate, user.trialEndsAt);
   return NextResponse.json({ remaining: rem === Infinity ? "unlimited" : rem, role: user.role });
 }
 
@@ -25,6 +26,9 @@ export async function POST(req: Request) {
   }
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
+  if (!isPremium(user.role, user.trialEndsAt)) {
+    return NextResponse.json({ error: "premium" }, { status: 402 });
+  }
 
   const body = (await req.json()) as {
     kind: string;
@@ -38,7 +42,7 @@ export async function POST(req: Request) {
 
   const day = today();
   if (body.consumeScan) {
-    const rem = remainingScans(user.role, user.scansToday, user.scansDate);
+    const rem = remainingScans(user.role, user.scansToday, user.scansDate, user.trialEndsAt);
     if (rem !== Infinity && rem <= 0) {
       return NextResponse.json({ error: "Quota de scans atteint. Passe à l'abonnement." }, { status: 402 });
     }

@@ -16,6 +16,9 @@ export type OffProduct = {
   nutrients: Partial<NutrientMap>;
   nutrimentsRaw: Record<string, number | undefined>;
   countries: string[];
+  ecoGrade: string;
+  origins: string[];
+  categories: string[];
 };
 
 function num(v: unknown): number {
@@ -62,6 +65,7 @@ function mapProduct(p: Record<string, unknown>, fallbackCode: string, lang: Loca
   ];
   const nutriments = (p.nutriments as Record<string, unknown>) ?? {};
   const countries = ((p.countries_tags as string[]) ?? []).map((c) => c.replace(/^en:/, ""));
+  const origins = ((p.origins_tags as string[]) ?? []).map((c) => c.replace(/^en:/, ""));
   return {
     barcode: code,
     barcodeInfo: inspectBarcode(code),
@@ -82,12 +86,15 @@ function mapProduct(p: Record<string, unknown>, fallbackCode: string, lang: Loca
       sugars: num(nutriments.sugars_100g),
     },
     countries,
+    ecoGrade: String(p.ecoscore_grade ?? "").toLowerCase(),
+    origins,
+    categories: ((p.categories_tags as string[]) ?? []).map(String),
   };
 }
 
 const OFF_HEADERS = { "User-Agent": "VitaVegan/1.0 (https://vitavegan.app)" };
 const FIELDS =
-  "product_name,product_name_fr,product_name_en,product_name_de,product_name_es,product_name_it,product_name_nl,product_name_pt,product_name_pl,brands,image_front_small_url,image_url,ingredients_text,ingredients_text_fr,ingredients_text_en,ingredients_text_de,ingredients_text_es,ingredients_text_it,ingredients_text_nl,ingredients_text_pt,ingredients_text_pl,labels_tags,ingredients_analysis_tags,nutriments,code,countries_tags";
+  "product_name,product_name_fr,product_name_en,product_name_de,product_name_es,product_name_it,product_name_nl,product_name_pt,product_name_pl,brands,image_front_small_url,image_url,ingredients_text,ingredients_text_fr,ingredients_text_en,ingredients_text_de,ingredients_text_es,ingredients_text_it,ingredients_text_nl,ingredients_text_pt,ingredients_text_pl,labels_tags,ingredients_analysis_tags,nutriments,code,countries_tags,ecoscore_grade,origins_tags,categories_tags";
 
 async function fetchProductJson(code: string, lang: Locale): Promise<Record<string, unknown> | null> {
   const url = `https://world.openfoodfacts.org/api/v2/product/${code}.json?lc=${lang}&fields=${FIELDS}`;

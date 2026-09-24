@@ -1,6 +1,9 @@
 "use client";
 
+import { useI18n } from "@/components/i18n/LanguageProvider";
+
 export function SubscribeButtons() {
+  const { t } = useI18n();
   async function go(plan: "monthly" | "yearly" | "demo") {
     const res = await fetch("/api/stripe/checkout", {
       method: "POST",
@@ -18,15 +21,15 @@ export function SubscribeButtons() {
   }
 
   return (
-    <div className="flex flex-wrap gap-3">
-      <button type="button" onClick={() => void go("monthly")} className="rounded-full bg-forest px-4 py-2 text-cream">
-        4,99 € / mois
+    <div className="flex flex-col gap-3">
+      <button type="button" onClick={() => void go("monthly")} className="btn btn-primary w-full">
+        {t("billing.monthly")}
       </button>
-      <button type="button" onClick={() => void go("yearly")} className="rounded-full border border-forest px-4 py-2">
-        39 € / an
+      <button type="button" onClick={() => void go("yearly")} className="btn btn-secondary w-full">
+        {t("billing.yearly")}
       </button>
-      <button type="button" onClick={() => void go("demo")} className="rounded-full bg-cat px-4 py-2">
-        Activer l&apos;abo démo (sans Stripe)
+      <button type="button" onClick={() => void go("demo")} className="btn btn-accent w-full">
+        {t("billing.demo")}
       </button>
     </div>
   );

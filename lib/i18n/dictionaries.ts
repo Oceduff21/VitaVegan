@@ -1,3 +1,6 @@
+import { extraDict } from "@/lib/i18n/more";
+import { profileDict } from "@/lib/i18n/profile-strings";
+
 export type Locale = "fr" | "en" | "de" | "es" | "it" | "nl" | "pt" | "pl";
 
 export const LOCALES: { id: Locale; label: string; native: string }[] = [
@@ -25,14 +28,16 @@ type Dict = Record<string, string>;
 
 const fr: Dict = {
   "nav.scan": "Scan",
-  "nav.gauges": "Jauges",
+  "nav.gauges": "Santé",
   "nav.recipes": "Recettes",
   "nav.academy": "Académie",
   "nav.account": "Compte",
   "nav.login": "Connexion",
-  "nav.logout": "Sortir",
+  "nav.logout": "Déconnexion",
   "nav.language": "Langue",
   "home.kicker": "Mode de vie vegan · Europe",
+  "meta.title": "VitaVegan — scan, jauges, recettes, cosmétiques",
+  "meta.desc": "Application de mode de vie vegan : scan alimentaire et cosmétique, score compassion, jauges, recettes, quiz.",
   "home.title": "Scanner, comprendre, se nourrir — sans jamais juger un mot tout seul.",
   "home.lead": "VitaVegan te dit si un produit est vegan et pourquoi. Lait d'amande n'est pas lait de vache. Les codes-barres européens (EAN / GTIN) sont reconnus dans toute l'Europe.",
   "home.scanCta": "Scanner un produit",
@@ -43,8 +48,8 @@ const fr: Dict = {
   "home.ex.cow": "Lait de vache",
   "home.card.scan": "Scan",
   "home.card.scanText": "EAN-8, EAN-13, UPC : Open Food Facts Europe, ingrédients désambiguïsés, apports.",
-  "home.card.gauges": "Jauges",
-  "home.card.gaugesText": "B12, fer, calcium, protéines… des barres qui se remplissent quand tu loggues un repas.",
+  "home.card.gauges": "Santé",
+  "home.card.gaugesText": "B12, fer, calcium, protéines… des barres qui se remplissent quand tu scans un produit ou cuisine une recette.",
   "home.card.community": "Communauté",
   "home.card.communityText": "Recettes officielles gratuites. Publier et lire la communauté : abonnement.",
   "home.pricingTitle": "Freemium clair",
@@ -73,6 +78,7 @@ const fr: Dict = {
   "scan.notFound": "Produit introuvable. Vérifie la référence ou saisis les ingrédients.",
   "scan.eat": "J'ai mangé ça",
   "scan.saved": "Ajouté aux jauges du jour.",
+  "scan.productSaved": "Produit enregistré et noté.",
   "scan.manualName": "Saisie manuelle",
   "scan.ref": "Référence",
   "scan.origin": "Origine GS1",
@@ -91,7 +97,7 @@ const fr: Dict = {
 
 const en: Dict = {
   "nav.scan": "Scan",
-  "nav.gauges": "Gauges",
+  "nav.gauges": "Health",
   "nav.recipes": "Recipes",
   "nav.academy": "Academy",
   "nav.account": "Account",
@@ -99,6 +105,8 @@ const en: Dict = {
   "nav.logout": "Log out",
   "nav.language": "Language",
   "home.kicker": "Vegan lifestyle · Europe",
+  "meta.title": "VitaVegan — scan, gauges, recipes, cosmetics",
+  "meta.desc": "Vegan lifestyle app: food and cosmetics scan, compassion score, gauges, recipes, quizzes.",
   "home.title": "Scan, understand, eat — never judge a word on its own.",
   "home.lead": "VitaVegan tells you if a product is vegan and why. Almond milk is not cow's milk. European barcodes (EAN / GTIN) work across Europe.",
   "home.scanCta": "Scan a product",
@@ -109,8 +117,8 @@ const en: Dict = {
   "home.ex.cow": "Cow's milk",
   "home.card.scan": "Scan",
   "home.card.scanText": "EAN-8, EAN-13, UPC: Open Food Facts Europe, disambiguated ingredients, nutrition.",
-  "home.card.gauges": "Gauges",
-  "home.card.gaugesText": "B12, iron, calcium, protein… bars that fill when you log a meal.",
+  "home.card.gauges": "Health",
+  "home.card.gaugesText": "B12, iron, calcium, protein… bars that fill when you scan a product or cook a recipe.",
   "home.card.community": "Community",
   "home.card.communityText": "Official recipes are free. Publishing and community recipes: subscription.",
   "home.pricingTitle": "Clear freemium",
@@ -139,6 +147,7 @@ const en: Dict = {
   "scan.notFound": "Product not found. Check the code or enter the ingredients.",
   "scan.eat": "I ate this",
   "scan.saved": "Added to today's gauges.",
+  "scan.productSaved": "Product saved and scored.",
   "scan.manualName": "Manual entry",
   "scan.ref": "Reference",
   "scan.origin": "GS1 origin",
@@ -157,7 +166,7 @@ const en: Dict = {
 
 const de: Dict = {
   ...en,
-  "nav.gauges": "Anzeigen",
+  "nav.gauges": "Gesundheit",
   "nav.recipes": "Rezepte",
   "nav.academy": "Akademie",
   "nav.account": "Konto",
@@ -165,6 +174,8 @@ const de: Dict = {
   "nav.logout": "Abmelden",
   "nav.language": "Sprache",
   "home.kicker": "Veganer Alltag · Europa",
+  "meta.title": "VitaVegan — Scan, Anzeigen, Rezepte, Kosmetik",
+  "meta.desc": "App für veganen Alltag: Lebensmittel- und Kosmetikscan, Mitgefühls-Score, Anzeigen, Rezepte, Quiz.",
   "home.title": "Scannen, verstehen, essen — niemals ein Wort allein bewerten.",
   "home.lead": "VitaVegan sagt, ob ein Produkt vegan ist und warum. Mandelmilch ist keine Kuhmilch. Europäische EAN/GTIN-Codes funktionieren in ganz Europa.",
   "home.scanCta": "Produkt scannen",
@@ -174,8 +185,11 @@ const de: Dict = {
   "home.ex.plain": "„Milch“ ohne Angabe",
   "home.ex.cow": "Kuhmilch",
   "home.card.scanText": "EAN-8, EAN-13, UPC: Open Food Facts Europa, Zutaten, Nährwerte.",
-  "home.card.gauges": "Anzeigen",
+  "home.card.gauges": "Gesundheit",
+  "home.card.gaugesText": "B12, Eisen, Kalzium, Eiweiß… Balken, die sich füllen, wenn du ein Produkt scannst oder ein Rezept kochst.",
   "home.card.community": "Community",
+  "home.card.communityText": "Offizielle Rezepte sind gratis. Veröffentlichen und Community: Abo.",
+  "home.pricingTitle": "Klares Freemium",
   "home.signup": "Konto erstellen",
   "scan.lead": "Ziele auf den Strichcode (EAN-13, EAN-8, UPC). Die Kamera stoppt nach dem Scan, beim Tabwechsel oder über Stopp.",
   "scan.remaining": "Scans heute übrig",
@@ -209,7 +223,7 @@ const de: Dict = {
 
 const es: Dict = {
   ...en,
-  "nav.gauges": "Medidores",
+  "nav.gauges": "Salud",
   "nav.recipes": "Recetas",
   "nav.academy": "Academia",
   "nav.account": "Cuenta",
@@ -217,6 +231,8 @@ const es: Dict = {
   "nav.logout": "Salir",
   "nav.language": "Idioma",
   "home.kicker": "Vida vegana · Europa",
+  "meta.title": "VitaVegan — escaneo, medidores, recetas, cosmética",
+  "meta.desc": "App vegana: escaneo de alimentos y cosmética, puntuación, medidores, recetas, quizzes.",
   "home.title": "Escanear, entender, comer — nunca juzgar una palabra sola.",
   "home.lead": "VitaVegan te dice si un producto es vegano y por qué. La leche de almendra no es leche de vaca. Los códigos EAN/GTIN europeos funcionan en toda Europa.",
   "home.scanCta": "Escanear un producto",
@@ -226,6 +242,9 @@ const es: Dict = {
   "home.ex.plain": "«Leche» sin detalle",
   "home.ex.cow": "Leche de vaca",
   "home.signup": "Crear una cuenta",
+  "home.card.gaugesText": "B12, hierro, calcio, proteínas… barras que se llenan al registrar una comida.",
+  "home.card.communityText": "Recetas oficiales gratis. Publicar y comunidad: suscripción.",
+  "home.pricingTitle": "Freemium claro",
   "scan.lead": "Apunta al código (EAN-13, EAN-8, UPC). La cámara se para al escanear, al cambiar de pestaña o con Detener.",
   "scan.remaining": "Escaneos restantes hoy",
   "scan.unlimited": "ilimitados",
@@ -258,7 +277,7 @@ const es: Dict = {
 
 const it: Dict = {
   ...en,
-  "nav.gauges": "Indicatori",
+  "nav.gauges": "Salute",
   "nav.recipes": "Ricette",
   "nav.academy": "Accademia",
   "nav.account": "Account",
@@ -266,6 +285,8 @@ const it: Dict = {
   "nav.logout": "Esci",
   "nav.language": "Lingua",
   "home.kicker": "Stile di vita vegan · Europa",
+  "meta.title": "VitaVegan — scan, indicatori, ricette, cosmetici",
+  "meta.desc": "App vegan: scan cibo e cosmetici, punteggio compassione, indicatori, ricette, quiz.",
   "home.title": "Scansiona, capisci, mangia — non giudicare mai una parola da sola.",
   "home.lead": "VitaVegan ti dice se un prodotto è vegan e perché. Il latte di mandorla non è latte vaccino. I codici EAN/GTIN europei funzionano in tutta Europa.",
   "home.scanCta": "Scansiona un prodotto",
@@ -275,6 +296,9 @@ const it: Dict = {
   "home.ex.plain": "«Latte» senza dettaglio",
   "home.ex.cow": "Latte vaccino",
   "home.signup": "Crea un account",
+  "home.card.gaugesText": "B12, ferro, calcio, proteine… barre che si riempiono quando registri un pasto.",
+  "home.card.communityText": "Ricette ufficiali gratis. Pubblicare e community: abbonamento.",
+  "home.pricingTitle": "Freemium chiaro",
   "scan.lead": "Inquadra il codice (EAN-13, EAN-8, UPC). La fotocamera si ferma dopo la scansione, cambiando scheda o con Stop.",
   "scan.remaining": "Scansioni rimaste oggi",
   "scan.unlimited": "illimitate",
@@ -307,7 +331,7 @@ const it: Dict = {
 
 const nl: Dict = {
   ...en,
-  "nav.gauges": "Meters",
+  "nav.gauges": "Gezondheid",
   "nav.recipes": "Recepten",
   "nav.academy": "Academie",
   "nav.account": "Account",
@@ -315,6 +339,8 @@ const nl: Dict = {
   "nav.logout": "Uitloggen",
   "nav.language": "Taal",
   "home.kicker": "Vegan levensstijl · Europa",
+  "meta.title": "VitaVegan — scan, meters, recepten, cosmetica",
+  "meta.desc": "Vegan lifestyle-app: voedsel- en cosmeticascan, compassiescore, meters, recepten, quizzen.",
   "home.title": "Scannen, begrijpen, eten — beoordeel nooit één woord alleen.",
   "home.lead": "VitaVegan zegt of een product vegan is en waarom. Amandelmelk is geen koemelk. Europese EAN/GTIN-codes werken in heel Europa.",
   "home.scanCta": "Product scannen",
@@ -323,6 +349,9 @@ const nl: Dict = {
   "home.ex.plain": "“Melk” zonder detail",
   "home.ex.cow": "Koemelk",
   "home.signup": "Account maken",
+  "home.card.gaugesText": "B12, ijzer, calcium, eiwit… balken die vollopen als je een product scant of een recept kookt.",
+  "home.card.communityText": "Officiële recepten zijn gratis. Publiceren en community: abonnement.",
+  "home.pricingTitle": "Duidelijk freemium",
   "scan.lead": "Richt op de barcode (EAN-13, EAN-8, UPC). De camera stopt na een scan, bij wisselen van tabblad, of via Stop.",
   "scan.remaining": "Scans over vandaag",
   "scan.unlimited": "onbeperkt",
@@ -354,7 +383,7 @@ const nl: Dict = {
 
 const pt: Dict = {
   ...en,
-  "nav.gauges": "Medidores",
+  "nav.gauges": "Saúde",
   "nav.recipes": "Receitas",
   "nav.academy": "Academia",
   "nav.account": "Conta",
@@ -362,6 +391,8 @@ const pt: Dict = {
   "nav.logout": "Sair",
   "nav.language": "Idioma",
   "home.kicker": "Estilo de vida vegan · Europa",
+  "meta.title": "VitaVegan — scan, medidores, receitas, cosmética",
+  "meta.desc": "App vegan: scan de alimentos e cosmética, pontuação, medidores, receitas, quizzes.",
   "home.title": "Digitalizar, perceber, comer — nunca julgar uma palavra sozinha.",
   "home.lead": "A VitaVegan diz se um produto é vegan e porquê. Leite de amêndoa não é leite de vaca. Os códigos EAN/GTIN europeus funcionam em toda a Europa.",
   "home.scanCta": "Digitalizar um produto",
@@ -370,6 +401,9 @@ const pt: Dict = {
   "home.ex.plain": "«Leite» sem detalhe",
   "home.ex.cow": "Leite de vaca",
   "home.signup": "Criar conta",
+  "home.card.gaugesText": "B12, ferro, cálcio, proteínas… barras que enchem quando registas uma refeição.",
+  "home.card.communityText": "Receitas oficiais grátis. Publicar e comunidade: subscrição.",
+  "home.pricingTitle": "Freemium claro",
   "scan.lead": "Aponta ao código (EAN-13, EAN-8, UPC). A câmara pára após o scan, ao mudar de separador, ou em Parar.",
   "scan.remaining": "Scans restantes hoje",
   "scan.unlimited": "ilimitados",
@@ -401,7 +435,7 @@ const pt: Dict = {
 
 const pl: Dict = {
   ...en,
-  "nav.gauges": "Wskaźniki",
+  "nav.gauges": "Zdrowie",
   "nav.recipes": "Przepisy",
   "nav.academy": "Akademia",
   "nav.account": "Konto",
@@ -409,6 +443,8 @@ const pl: Dict = {
   "nav.logout": "Wyloguj",
   "nav.language": "Język",
   "home.kicker": "Styl życia vegan · Europa",
+  "meta.title": "VitaVegan — skan, wskaźniki, przepisy, kosmetyki",
+  "meta.desc": "Aplikacja wegańska: skan żywności i kosmetyków, ocena współczucia, wskaźniki, przepisy, quizy.",
   "home.title": "Skanuj, rozumiej, jedz — nigdy nie oceniaj samego słowa.",
   "home.lead": "VitaVegan mówi, czy produkt jest wegański i dlaczego. Mleko migdałowe to nie krowie. Europejskie kody EAN/GTIN działają w całej Europie.",
   "home.scanCta": "Skanuj produkt",
@@ -417,6 +453,9 @@ const pl: Dict = {
   "home.ex.plain": "„Mleko” bez dopisku",
   "home.ex.cow": "Mleko krowie",
   "home.signup": "Utwórz konto",
+  "home.card.gaugesText": "B12, żelazo, wapń, białko… paski, które napełniają się po skanie produktu lub ugotowaniu przepisu.",
+  "home.card.communityText": "Oficjalne przepisy za darmo. Publikacja i społeczność: subskrypcja.",
+  "home.pricingTitle": "Jasny freemium",
   "scan.lead": "Skieruj na kod (EAN-13, EAN-8, UPC). Kamera zatrzymuje się po skanie, przy zmianie karty lub przez Stop.",
   "scan.remaining": "Skanów zostało dziś",
   "scan.unlimited": "bez limitu",
@@ -449,5 +488,17 @@ const pl: Dict = {
 export const DICTS: Record<Locale, Dict> = { fr, en, de, es, it, nl, pt, pl };
 
 export function translate(locale: Locale, key: string): string {
-  return DICTS[locale][key] ?? DICTS.fr[key] ?? key;
+  const extra = extraDict(locale);
+  const profile = profileDict(locale);
+  return (
+    extra[key] ??
+    profile[key] ??
+    DICTS[locale][key] ??
+    extraDict("en")[key] ??
+    profileDict("en")[key] ??
+    DICTS.en[key] ??
+    DICTS.fr[key] ??
+    extraDict("fr")[key] ??
+    key
+  );
 }

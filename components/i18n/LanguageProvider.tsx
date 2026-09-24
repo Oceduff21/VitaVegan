@@ -1,12 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import {
-  isLocale,
-  localeFromBrowser,
-  translate,
-  type Locale,
-} from "@/lib/i18n/dictionaries";
+import { createContext, useContext, useMemo } from "react";
+import { isLocale, translate, type Locale } from "@/lib/i18n/dictionaries";
+import { LANG_COOKIE } from "@/lib/i18n/cookie";
 
 const STORAGE = "vitavegan-lang";
 
@@ -22,27 +18,29 @@ const Ctx = createContext<I18n>({
   t: (k) => translate("fr", k),
 });
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("fr");
+function persist(locale: Locale) {
+  window.localStorage.setItem(STORAGE, locale);
+  document.cookie = `${LANG_COOKIE}=${locale};path=/;max-age=31536000;samesite=lax`;
+  document.documentElement.lang = locale;
+}
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE);
-    const next = isLocale(stored) ? stored : localeFromBrowser();
-    setLocaleState(next);
-    document.documentElement.lang = next;
-  }, []);
-
+export function LanguageProvider({
+  children,
+  initialLocale = "fr",
+}: {
+  children: React.ReactNode;
+  initialLocale?: Locale;
+}) {
   const value = useMemo<I18n>(
     () => ({
-      locale,
+      locale: initialLocale,
       setLocale: (l) => {
-        setLocaleState(l);
-        window.localStorage.setItem(STORAGE, l);
-        document.documentElement.lang = l;
+        if (!isLocale(l)) return;
+        persist(l);
       },
-      t: (key) => translate(locale, key),
+      t: (key) => translate(initialLocale, key),
     }),
-    [locale],
+    [initialLocale],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -1,8 +1,10 @@
 # VitaVegan
 
-Application web de mode de vie vegan : scan produits, score compassion (têtes de chats / vaches / lapins), jauges nutritionnelles, recettes, mini-jeux.
+Application web de mode de vie vegan : scan produits, score compassion (têtes de chats / vaches / lapins), jauges nutritionnelles, recettes, mini-jeux, cosmétiques (ingrédients animaux + tests sur animaux).
 
-## Lancer en local
+Inscription = **7 jours d’essai premium**, puis gratuit (3 scans/jour) ou abonnement 4,99 €/mois.
+
+## Lancer en local (SQLite)
 
 ```bash
 npm install
@@ -15,10 +17,37 @@ Ouvre [http://localhost:3000](http://localhost:3000).
 
 Comptes de démo :
 
-- `demo@vitavegan.app` / `demo123`
+- `demo@vitavegan.app` / `demo123` (essai 7 jours)
 - `admin@vitavegan.app` / `admin123`
 
 Sans clés Stripe, le bouton **Activer l'abo démo** sur `/compte` débloque scans illimités, communauté et académie.
+
+## Postgres (Vercel / prod)
+
+SQLite ne tient pas sur Vercel. En local tu peux rester sur `file:./dev.db`. Pour Postgres :
+
+```bash
+docker compose up -d
+```
+
+Dans `prisma/schema.prisma`, passe le provider :
+
+```
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+`.env` :
+
+```
+DATABASE_URL="postgresql://vitavegan:vitavegan@localhost:5432/vitavegan"
+```
+
+Puis `npx prisma db push` et `npx tsx prisma/seed.ts`.
+
+Sur Vercel : Neon / Supabase / Vercel Postgres, même `DATABASE_URL` + `npx prisma generate` au build.
 
 ## Stripe (production)
 
@@ -38,7 +67,7 @@ Webhook : `POST /api/stripe/webhook`
 3. Passe `DATABASE_URL` sur Postgres (Prisma) en production
 4. `prisma db push` en post-build ou via un script de release
 
-Le `vercel.json` est prêt. En prod, SQLite n'est pas adapté : utilise une base Postgres.
+Le `vercel.json` est prêt.
 
 ## Moteur vegan
 

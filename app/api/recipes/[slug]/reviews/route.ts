@@ -1,0 +1,75 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { isPremium } from "@/lib/entitlements";
+import { parsePrefs } from "@/lib/profile";
+
+function mapReviews(
+  rows: {
+    id: string;
+    rating: number;
+    comment: string;
+    createdAt: Date;
+    userId: string;
+    user: { firstName: string; name: string; prefs: string };
+  }[],
+  me?: string,
+) {
+  return rows.map((r) => {
+    const prefs = parsePrefs(r.user.prefs);
+    return {
+      id: r.id,
+      rating: r.rating,
+      comment: r.comment,
+      createdAt: r.createdAt.toISOString(),
+      author: r.user.firstName || r.user.name || "Vita",
+      avatarId: prefs.avatarId,
+      photo: prefs.photo,
+      mine: me ? r.userId === me : false,
+    };
+  });
+}
+
+async function loadReviews(recipeId: string, me?: string) {
+  const rows = await prisma.recipeReview.findMany({
+    where: { recipeId },
+    orderBy: { createdAt: "desc" },
+    include: { user: { select: { firstName: true, name: true, prefs: true } } },
+  });
+  return mapReviews(rows, me);
+}
+
+export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const recipe = await prisma.recipe.findUnique({ where: { slug }, select: { id: true } });
+  if (!recipe) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const session = await auth();
+  return NextResponse.json({ reviews: await loadReviews(recipe.id, session?.user?.id) });
+}
+
+export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "auth" }, { status: 401 });
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!user || !isPremium(user.role, user.trialEndsAt)) {
+    return NextResponse.json({ error: "premium" }, { status: 402 });
+  }
+  const recipe = await prisma.recipe.findUnique({ where: { slug }, select: { id: true, status: true } });
+  if (!recipe || recipe.status !== "published") return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  const body = (await req.json()) as { rating?: number; comment?: string };
+  const rating = Number(body.rating);
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return NextResponse.json({ error: "rating" }, { status: 400 });
+  }
+  const comment = String(body.comment ?? "").trim().slice(0, 800);
+
+  await prisma.recipeReview.upsert({
+    where: { recipeId_userId: { recipeId: recipe.id, userId: user.id } },
+    update: { rating, comment },
+    create: { recipeId: recipe.id, userId: user.id, rating, comment },
+  });
+
+  return NextResponse.json({ ok: true, reviews: await loadReviews(recipe.id, user.id) });
+}

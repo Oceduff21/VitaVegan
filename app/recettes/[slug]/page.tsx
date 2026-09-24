@@ -1,74 +1,97 @@
+import { requireFullApp } from "@/lib/access";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { auth, isSubscriber } from "@/auth";
 import { AnimalScore } from "@/components/score/AnimalScore";
-import { LogRecipeButton } from "@/components/LogRecipeButton";
-
-const CATEGORIES: Record<string, string> = {
-  "petit-dej": "Petit-déj",
-  plat: "Plat",
-  dessert: "Dessert",
-  snack: "Snack",
-  batch: "Batch",
-};
+import { FavoriteButton } from "@/components/FavoriteButton";
+import { RecipeCookPanel } from "@/components/recipes/RecipeCookPanel";
+import { RecipeReviews } from "@/components/recipes/RecipeReviews";
+import { getT } from "@/lib/i18n/server";
+import { recipeLocale } from "@/lib/i18n/recipes";
+import { recipeCover } from "@/data/recipe-covers";
+import { recipeHasAlcohol } from "@/data/official-recipes";
+import { parseGear, parseTasting, recipeServe } from "@/data/recipe-serve";
+import { parsePrefs } from "@/lib/profile";
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const session = await auth();
+  const session = await requireFullApp();
+  const { t, locale } = await getT();
   const recipe = await prisma.recipe.findUnique({ where: { slug } });
   if (!recipe) notFound();
-  if (recipe.status !== "published" && recipe.authorId !== session?.user?.id) notFound();
-  if (recipe.source === "community" && recipe.status === "published" && !isSubscriber(session?.user?.role)) {
-    return (
-      <div>
-        <h1 className="text-3xl">{recipe.title}</h1>
-        <p className="mt-3">Recette communautaire — abonne-toi pour la lire.</p>
-      </div>
-    );
-  }
+  if (recipe.status !== "published" && recipe.authorId !== session.user.id) notFound();
 
+  const loc = recipe.source === "official" ? recipeLocale(recipe.slug, locale) : null;
   const ingredients = JSON.parse(recipe.ingredients) as { text: string; amount?: string }[];
   const steps = JSON.parse(recipe.steps) as string[];
+  const shownIngredients = loc?.ingredients
+    ? ingredients.map((ing, i) => ({ ...ing, text: loc.ingredients?.[i] ?? ing.text }))
+    : ingredients;
+  const shownSteps = loc?.steps ?? steps;
+  const cover = recipeCover(recipe.slug, recipe.image);
+  const title = loc?.title ?? recipe.title;
+  const summary = loc?.summary ?? recipe.summary;
+  const veganWhy = loc?.veganWhy ?? recipe.veganWhy;
+  const extras = recipeServe(recipe.slug, recipe.category);
+  const gear = parseGear(recipe.gear, extras.gear);
+  const tasting = parseTasting(recipe.tasting, extras.tasting);
+  const fav = session?.user
+    ? await prisma.favorite.findUnique({
+        where: { userId_recipeId: { userId: session.user.id, recipeId: recipe.id } },
+      })
+    : null;
+  const reviewRows = await prisma.recipeReview.findMany({
+    where: { recipeId: recipe.id },
+    orderBy: { createdAt: "desc" },
+    include: { user: { select: { firstName: true, name: true, prefs: true } } },
+  });
+  const reviews = reviewRows.map((r) => {
+    const prefs = parsePrefs(r.user.prefs);
+    return {
+      id: r.id,
+      rating: r.rating,
+      comment: r.comment,
+      createdAt: r.createdAt.toISOString(),
+      author: r.user.firstName || r.user.name || "Vita",
+      avatarId: prefs.avatarId,
+      photo: prefs.photo,
+      mine: r.userId === session.user.id,
+    };
+  });
 
   return (
     <article className="flex flex-col gap-6">
+      {cover ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={cover} alt="" className="h-52 w-full rounded-3xl object-cover sm:h-72" />
+      ) : null}
       <div>
         <p className="text-xs uppercase tracking-wide text-leaf">
-          {CATEGORIES[recipe.category]} · {recipe.timeMinutes} min · {recipe.difficulty}
-          {recipe.glutenFree ? " · sans gluten" : ""}
+          {t(`recipes.cat.${recipe.category}`)} · {recipe.timeMinutes} {t("recipes.min")} · {recipe.difficulty}
+          {recipe.glutenFree ? ` · ${t("recipes.gf")}` : ""}
+          {recipe.category === "apero"
+            ? ` · ${recipeHasAlcohol(recipe.slug) ? t("recipes.alcYes") : t("recipes.alcNo")}`
+            : ""}
         </p>
-        <h1 className="mt-1 text-4xl">{recipe.title}</h1>
-        <p className="mt-2 text-ink/70">{recipe.summary}</p>
+        <h1 className="mt-1 text-2xl leading-tight sm:text-4xl">{title}</h1>
+        <p className="mt-2 text-ink/70">{summary}</p>
       </div>
+      {session?.user ? <FavoriteButton recipeId={recipe.id} initial={Boolean(fav)} /> : null}
       <AnimalScore score={recipe.veganScore} />
-      <p className="text-sm">{recipe.veganWhy}</p>
-      <section>
-        <h2 className="mb-2 text-2xl">Ingrédients ({recipe.servings} pers.)</h2>
-        <ul className="list-disc pl-5">
-          {ingredients.map((ing, i) => (
-            <li key={i}>
-              {ing.amount ? `${ing.amount} ` : ""}
-              {ing.text}
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section>
-        <h2 className="mb-2 text-2xl">Étapes</h2>
-        <ol className="list-decimal space-y-2 pl-5">
-          {steps.map((s, i) => (
-            <li key={i}>{s}</li>
-          ))}
-        </ol>
-      </section>
-      {session?.user ? (
-        <LogRecipeButton
-          label={recipe.title}
-          nutrients={recipe.nutrients}
-          veganScore={recipe.veganScore}
-          veganWhy={recipe.veganWhy}
-        />
-      ) : null}
+      <p className="text-sm">{veganWhy}</p>
+      <RecipeCookPanel
+        slug={recipe.slug}
+        title={title}
+        baseServings={recipe.servings}
+        ingredients={shownIngredients}
+        steps={shownSteps}
+        gear={gear}
+        tasting={tasting}
+        nutrients={recipe.nutrients}
+        veganScore={recipe.veganScore}
+        veganWhy={veganWhy}
+        signedIn={Boolean(session?.user)}
+      />
+      <RecipeReviews slug={recipe.slug} initial={reviews} signedIn={Boolean(session?.user)} />
     </article>
   );
 }

@@ -10,13 +10,33 @@ export default async function AdminPage() {
     where: { status: "pending" },
     orderBy: { createdAt: "desc" },
   });
+  const reports = await prisma.report.findMany({
+    where: { status: "pending" },
+    orderBy: { createdAt: "desc" },
+    take: 40,
+  });
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl">Modération</h1>
+      <h1 className="text-2xl sm:text-3xl">Modération</h1>
       <p className="text-ink/70">
-        Les recettes avec ingrédient animal certain n&apos;arrivent pas ici : refus auto. Ici : file humaine + règles de
-        termes.
+        Recettes en attente, plus les signalements Open Food Facts / OCR.
       </p>
+      <section>
+        <h2 className="mb-2 text-xl">Signalements</h2>
+        {reports.length === 0 ? <p>Aucun signalement.</p> : null}
+        <ul className="flex flex-col gap-3">
+          {reports.map((r) => (
+            <li key={r.id} className="rounded-2xl bg-white p-4 text-sm">
+              <p className="font-medium">
+                {r.kind} · {r.barcode || r.target || "—"}
+              </p>
+              <p className="text-ink/70">{r.message}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section>
+        <h2 className="mb-2 text-xl">Recettes</h2>
       {pending.length === 0 ? (
         <p>Rien en attente.</p>
       ) : (
@@ -31,6 +51,7 @@ export default async function AdminPage() {
           ))}
         </ul>
       )}
+      </section>
     </div>
   );
 }

@@ -1,85 +1,133 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { auth, isSubscriber } from "@/auth";
-import { AnimalScore } from "@/components/score/AnimalScore";
+import { requireFullApp } from "@/lib/access";
+import { getT } from "@/lib/i18n/server";
+import { parsePrefs, recipeMatchesPrefs, hasAnyPref } from "@/lib/profile";
+import { recipeLocale } from "@/lib/i18n/recipes";
+import { recipeCover } from "@/data/recipe-covers";
+import { recipeHasAlcohol } from "@/data/official-recipes";
+import { RecipeFilters } from "@/components/recipes/RecipeFilters";
+import { RecipeCatalog, type RecipeListItem } from "@/components/recipes/RecipeCatalog";
+import { foldText, recipeKindIds, recipesHref, type RecipeFilterSp } from "@/lib/recipe-filters";
 
-const CATEGORIES: Record<string, string> = {
-  "petit-dej": "Petit-déj",
-  plat: "Plat",
-  dessert: "Dessert",
-  snack: "Snack",
-  batch: "Batch",
-};
+const CAT_KEYS = ["petit-dej", "plat", "dessert", "snack", "apero", "boisson", "batch", "bases"] as const;
 
 export default async function RecettesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ cat?: string; gf?: string; max?: string }>;
+  searchParams: Promise<RecipeFilterSp>;
 }) {
   const sp = await searchParams;
-  const session = await auth();
-  const sub = isSubscriber(session?.user?.role);
+  const session = await requireFullApp();
+  const { t, locale } = await getT();
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const prefs = parsePrefs(user?.prefs);
+  const favOnly = sp.fav === "1";
+  const mine = sp.mine === "1";
+  const mineHref = recipesHref(sp, { mine: mine ? null : "1" });
 
-  const recipes = await prisma.recipe.findMany({
-    where: {
-      status: "published",
-      ...(sub ? {} : { source: "official" }),
-      ...(sp.cat ? { category: sp.cat } : {}),
-      ...(sp.gf === "1" ? { glutenFree: true } : {}),
-      ...(sp.max ? { timeMinutes: { lte: Number(sp.max) } } : {}),
-    },
-    orderBy: [{ source: "asc" }, { title: "asc" }],
+  let recipes = await prisma.recipe.findMany({
+    where: favOnly
+      ? { favorites: { some: { userId: session.user.id } } }
+      : {
+          status: "published",
+          ...(sp.cat ? { category: sp.cat } : {}),
+          ...(sp.gf === "1" ? { glutenFree: true } : {}),
+          ...(sp.max ? { timeMinutes: { lte: Number(sp.max) } } : {}),
+        },
+    orderBy: [{ createdAt: "desc" }, { title: "asc" }],
+  });
+
+  if (mine) {
+    recipes = recipes.filter((r) => recipeMatchesPrefs(r, prefs));
+  }
+  if (sp.kind) {
+    recipes = recipes.filter((r) => recipeKindIds(r).includes(sp.kind!));
+  }
+  if (sp.cat === "apero" && sp.alc === "0") {
+    recipes = recipes.filter((r) => !recipeHasAlcohol(r.slug));
+  }
+  if (sp.cat === "apero" && sp.alc === "1") {
+    recipes = recipes.filter((r) => recipeHasAlcohol(r.slug));
+  }
+
+  const catalog: RecipeListItem[] = recipes.map((r) => {
+    const loc = recipeLocale(r.slug, locale);
+    const title = loc?.title ?? r.title;
+    const summary = loc?.summary ?? r.summary;
+    return {
+      id: r.id,
+      slug: r.slug,
+      title,
+      summary,
+      haystack: foldText(`${title} ${summary} ${r.title} ${r.summary} ${r.ingredients} ${r.slug}`),
+      cover: recipeCover(r.slug, r.image) ?? "",
+      kicker: `${t(`recipes.cat.${r.category}`) || r.category} · ${r.timeMinutes} ${t("recipes.min")}`,
+      score: r.veganScore,
+      badge:
+        r.source === "community"
+          ? t("recipes.communityBadge")
+          : r.category === "apero"
+            ? recipeHasAlcohol(r.slug)
+              ? t("recipes.alcYes")
+              : t("recipes.alcNo")
+            : undefined,
+    };
   });
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl">Recettes</h1>
-          <p className="text-ink/70">
-            {sub ? "Officielles + communauté." : "Recettes officielles. L'abo débloque la communauté."}
-          </p>
+          <h1 className="text-2xl sm:text-3xl">{favOnly ? t("fav.title") : t("recipes.title")}</h1>
+          <p className="text-sm text-ink/70 sm:text-base">{t("recipes.leadSearch")}</p>
         </div>
-        {sub ? (
-          <Link href="/recettes/nouvelle" className="rounded-full bg-forest px-4 py-2 text-cream">
-            Publier
+        <div className="flex flex-wrap gap-2">
+          <Link href="/courses" className="btn btn-secondary">
+            {t("shop.title")}
           </Link>
-        ) : (
-          <Link href="/compte" className="text-sm underline">
-            S&apos;abonner pour publier
+          <Link href="/recettes?fav=1" className="btn btn-secondary">
+            {t("nav.favorites")}
           </Link>
+          <Link href="/recettes/nouvelle" className="btn btn-primary">
+            {t("recipes.publish")}
+          </Link>
+        </div>
+      </div>
+      <RecipeCatalog
+        items={catalog}
+        placeholder={t("recipes.search")}
+        empty={favOnly ? t("fav.empty") : t("dashboard.empty")}
+        initialQuery={typeof sp.q === "string" ? sp.q : ""}
+      >
+        <div className="tabs" aria-label={t("recipes.title")}>
+          <Link href="/recettes" aria-current={!sp.cat && !favOnly ? "page" : undefined} className={`tab ${!sp.cat && !favOnly ? "is-on" : ""}`}>
+            {t("recipes.all")}
+          </Link>
+          {CAT_KEYS.map((id) => (
+            <Link
+              key={id}
+              href={`/recettes?cat=${id}`}
+              aria-current={sp.cat === id ? "page" : undefined}
+              className={`tab ${sp.cat === id ? "is-on" : ""}`}
+            >
+              {t(`recipes.cat.${id}`)}
+            </Link>
+          ))}
+        </div>
+        {favOnly ? null : <RecipeFilters sp={sp} t={t} />}
+        {hasAnyPref(prefs) ? null : (
+          <p className="text-sm text-ink/60">
+            <Link href="/compte" className="underline">
+              {t("pref.title")}
+            </Link>
+          </p>
         )}
-      </div>
-      <div className="flex flex-wrap gap-2 text-sm">
-        <Link href="/recettes" className="rounded-full border border-forest/20 px-3 py-1">
-          Toutes
+        <Link href={mineHref} className={`chip self-start ${mine ? "border-leaf bg-leaf/15 text-forest" : ""}`}>
+          <span aria-hidden>{mine ? "☑" : "☐"}</span>
+          {t("recipes.mine")}
         </Link>
-        {Object.entries(CATEGORIES).map(([id, label]) => (
-          <Link key={id} href={`/recettes?cat=${id}`} className="rounded-full border border-forest/20 px-3 py-1">
-            {label}
-          </Link>
-        ))}
-        <Link href="/recettes?gf=1" className="rounded-full border border-forest/20 px-3 py-1">
-          Sans gluten
-        </Link>
-        <Link href="/recettes?max=20" className="rounded-full border border-forest/20 px-3 py-1">
-          ≤ 20 min
-        </Link>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {recipes.map((r) => (
-          <Link key={r.id} href={`/recettes/${r.slug}`} className="rounded-2xl bg-white p-5">
-            <p className="text-xs uppercase tracking-wide text-leaf">
-              {CATEGORIES[r.category] ?? r.category} · {r.timeMinutes} min
-            </p>
-            <h2 className="mt-1 text-xl">{r.title}</h2>
-            <p className="mt-1 text-sm text-ink/70">{r.summary}</p>
-            <div className="mt-3">
-              <AnimalScore score={r.veganScore} size={28} showLabel={false} />
-            </div>
-          </Link>
-        ))}
-      </div>
+      </RecipeCatalog>
     </div>
   );
 }

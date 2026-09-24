@@ -11,6 +11,9 @@ const cases: { name: string; input: string; overall: string }[] = [
   { name: "beurre cacahuete", input: "beurre de cacahuète", overall: "vegetal_certain" },
   { name: "beurre seul", input: "beurre", overall: "animal_certain" },
   { name: "miel", input: "miel", overall: "animal_certain" },
+  { name: "cuir", input: "cuir de vachette", overall: "animal_certain" },
+  { name: "coton", input: "100% coton", overall: "vegetal_certain" },
+  { name: "silicone pas soie", input: "silicone", overall: "vegetal_certain" },
 ];
 
 let failed = 0;

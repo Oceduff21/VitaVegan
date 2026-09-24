@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import { Nav } from "@/components/Nav";
 import { Providers } from "@/components/Providers";
+import { getLocale, getT } from "@/lib/i18n/server";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -16,30 +17,36 @@ const dm = DM_Sans({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "VitaVegan — scan, jauges, recettes",
-    template: "%s · VitaVegan",
-  },
-  description:
-    "Application de mode de vie vegan : scan produits, score compassion, jauges nutritionnelles, recettes communautaires.",
-  applicationName: "VitaVegan",
-  appleWebApp: { capable: true, title: "VitaVegan", statusBarStyle: "default" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return {
+    title: {
+      default: t("meta.title"),
+      template: "%s · VitaVegan",
+    },
+    description: t("meta.desc"),
+    applicationName: "VitaVegan",
+    appleWebApp: { capable: true, title: "VitaVegan", statusBarStyle: "default" },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#1F4D3A",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
   return (
-    <html lang="fr" className={`${fraunces.variable} ${dm.variable}`}>
+    <html lang={locale} className={`${fraunces.variable} ${dm.variable}`}>
       <body className="min-h-screen antialiased">
-        <Providers>
+        <Providers locale={locale}>
           <Nav />
-          <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+          <main className="mx-auto max-w-5xl px-4 py-5 pb-[calc(6.25rem+env(safe-area-inset-bottom))] md:px-6 md:py-8 md:pb-8">
+            {children}
+          </main>
         </Providers>
       </body>
     </html>

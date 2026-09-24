@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { killAllCameras, requestCameraStream } from "@/lib/camera";
-
+import { useEffect, useRef, useState } from "react";
+import { killAllCameras, requestCameraStream, setTorch, torchSupported } from "@/lib/camera";
 type BarcodeDetectorLike = {
   detect: (source: HTMLVideoElement) => Promise<{ rawValue: string }[]>;
 };
@@ -49,14 +48,22 @@ export function CameraScanner({
   onCode,
   onStop,
   onDenied,
+  onReady,
   liveLabel,
-  stopLabel,
+  closeLabel,
+  flashOnLabel,
+  flashOffLabel,
+  flashUnavailable,
 }: {
   onCode: (value: string) => void;
   onStop: () => void;
   onDenied: () => void;
+  onReady?: () => void;
   liveLabel: string;
-  stopLabel: string;
+  closeLabel: string;
+  flashOnLabel: string;
+  flashOffLabel: string;
+  flashUnavailable: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -65,9 +72,13 @@ export function CameraScanner({
   const onCodeRef = useRef(onCode);
   const onStopRef = useRef(onStop);
   const onDeniedRef = useRef(onDenied);
+  const onReadyRef = useRef(onReady);
+  const [torchOn, setTorchOn] = useState(false);
+  const [torchOk, setTorchOk] = useState(false);
   onCodeRef.current = onCode;
   onStopRef.current = onStop;
   onDeniedRef.current = onDenied;
+  onReadyRef.current = onReady;
 
   useEffect(() => {
     let cancelled = false;
@@ -75,6 +86,7 @@ export function CameraScanner({
     function shutdown() {
       cancelled = true;
       window.clearTimeout(timerRef.current);
+      void setTorch(streamRef.current, false);
       const video = videoRef.current;
       if (video) {
         video.pause();
@@ -85,6 +97,8 @@ export function CameraScanner({
         t.enabled = false;
       });
       streamRef.current = null;
+      setTorchOn(false);
+      setTorchOk(false);
       killAllCameras();
     }
 
@@ -102,6 +116,8 @@ export function CameraScanner({
         video.muted = true;
         video.setAttribute("playsinline", "true");
         await video.play();
+        onReadyRef.current?.();
+        setTorchOk(torchSupported(stream));
 
         const detector = getDetector();
         const tick = async () => {
@@ -145,31 +161,77 @@ export function CameraScanner({
         onStopRef.current();
       }
     };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        shutdown();
+        onStopRef.current();
+      }
+    };
+
     document.addEventListener("visibilitychange", hide);
     window.addEventListener("pagehide", hide);
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     return () => {
       document.removeEventListener("visibilitychange", hide);
       window.removeEventListener("pagehide", hide);
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
       shutdown();
     };
   }, []);
 
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm text-leaf">{liveLabel}</p>
-      <video ref={videoRef} className="w-full max-w-md rounded-2xl bg-ink" autoPlay muted playsInline />
-      <div id="qr-fallback" className="hidden" />
+    <div className="scan-cam-overlay" role="dialog" aria-modal="true" aria-label={liveLabel}>
       <button
         type="button"
+        className={`scan-cam-flash${torchOn ? " is-on" : ""}`}
+        aria-pressed={torchOn}
+        aria-label={torchOk ? (torchOn ? flashOffLabel : flashOnLabel) : flashUnavailable}
+        title={torchOk ? (torchOn ? flashOffLabel : flashOnLabel) : flashUnavailable}
+        disabled={!torchOk}
         onClick={() => {
+          const next = !torchOn;
+          void setTorch(streamRef.current, next).then((ok) => {
+            if (ok) setTorchOn(next);
+          });
+        }}
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
+          <path
+            d="M13 2 4 14h7l-1 8 10-13h-7l1-7z"
+            fill={torchOn ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      <button
+        type="button"
+        className="scan-cam-close"
+        aria-label={closeLabel}
+        onClick={() => {
+          void setTorch(streamRef.current, false);
           killAllCameras();
           onStop();
         }}
-        className="self-start rounded-full bg-terracotta px-4 py-2 text-cream"
       >
-        {stopLabel}
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
+          <path
+            d="M6 6l12 12M18 6L6 18"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+        </svg>
       </button>
+      <p className="scan-cam-hint">{liveLabel}</p>
+      <video ref={videoRef} className="scan-cam-video" autoPlay muted playsInline />
+      <div id="qr-fallback" className="hidden" />
     </div>
   );
 }
