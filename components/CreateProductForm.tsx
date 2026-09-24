@@ -57,6 +57,7 @@ export function CreateProductForm({
     <div className="flex flex-col gap-3 rounded-3xl border border-forest/15 bg-white p-5">
       <h2 className="text-xl">{t("scan.create")}</h2>
       <p className="text-sm text-ink/70">{isEdible(articleKind) ? t("scan.createLead") : t("scan.createLeadGoods")}</p>
+      <p className="text-xs text-forest">{t("scan.createReward")}</p>
       <label className="flex flex-col gap-1 text-sm">
         <span className="text-ink/70">{t("scan.articleType")}</span>
         <select

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="leafFill" x1="12" y1="4" x2="52" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A8D63A"/>
+      <stop offset="0.5" stop-color="#4CAF50"/>
+      <stop offset="1" stop-color="#1F4D3A"/>
+    </linearGradient>
+  </defs>
+  <!-- Classic fig leaf: 5 clear lobes + stem -->
+  <path
+    fill="url(#leafFill)"
+    d="M32 3
+       C35 3 37.5 6.5 38.5 12
+       C43 5 52 6 57 14
+       C61 21 58 29 51 33
+       C57 37 61 47 55 56
+       C49 65 39 66 33 62
+       C32.5 66 32 69 32 71
+       C32 69 31.5 66 31 62
+       C25 66 15 65 9 56
+       C3 47 7 37 13 33
+       C6 29 3 21 7 14
+       C12 6 21 5 25.5 12
+       C26.5 6.5 29 3 32 3Z"
+  />
+  <!-- Soft veins (readable as a leaf, not scan bars) -->
+  <g fill="none" stroke="#EAF6D8" stroke-width="1.6" stroke-linecap="round" opacity="0.85">
+    <path d="M32 14 L32 58"/>
+    <path d="M32 28 L46 18"/>
+    <path d="M32 28 L18 18"/>
+    <path d="M32 40 L48 36"/>
+    <path d="M32 40 L16 36"/>
+    <path d="M32 50 L42 52"/>
+    <path d="M32 50 L22 52"/>
+  </g>
+  <path d="M32 66 C31 68.5 29 70 26 71.5" stroke="#1F4D3A" stroke-width="2.8" stroke-linecap="round"/>
+</svg>

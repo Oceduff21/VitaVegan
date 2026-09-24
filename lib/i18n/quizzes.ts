@@ -32,7 +32,7 @@ const BANK: Record<string, Partial<Record<Locale, LocQ>>> = {
     pl: { prompt: "Którą witaminę trzeba suplementować przy diecie 100% roślinnej?", explanation: "B12 nie jest pewna na niewzbogaconym wegańskim talerzu.", choices: { c: "Witamina C", b12: "Witamina B12", k: "Witamina K" } },
   },
   e120: {
-    en: { prompt: "Is colour E120 (carmine) vegan?", explanation: "Carmine comes from cochineal, an insect. VitaVegan marks it as animal-certain.", choices: { oui: "Yes", non: "No" } },
+    en: { prompt: "Is colour E120 (carmine) vegan?", explanation: "Carmine comes from cochineal, an insect. Verdegan marks it as animal-certain.", choices: { oui: "Yes", non: "No" } },
     de: { prompt: "Ist der Farbstoff E120 (Karmin) vegan?", explanation: "Karmin stammt von der Cochenille, einem Insekt.", choices: { oui: "Ja", non: "Nein" } },
     es: { prompt: "¿El colorante E120 (carmín) es vegano?", explanation: "El carmín viene de la cochinilla, un insecto.", choices: { oui: "Sí", non: "No" } },
     it: { prompt: "Il colorante E120 (carminio) è vegan?", explanation: "Il carminio viene dalla cocciniglia, un insetto.", choices: { oui: "Sì", non: "No" } },

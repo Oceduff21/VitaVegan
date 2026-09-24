@@ -116,8 +116,10 @@ export function CompareClient() {
   }
 
   useEffect(() => {
-    const preset = sp.get("a");
-    if (preset) void fillSlot("a", preset);
+    const presetA = sp.get("a");
+    const presetB = sp.get("b");
+    if (presetA) void fillSlot("a", presetA);
+    if (presetB) void fillSlot("b", presetB);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- preload once from the URL
   }, []);
 

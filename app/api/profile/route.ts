@@ -85,6 +85,7 @@ export async function PUT(req: Request) {
     { themeId: merged.themeId, stickerId: merged.stickerId, avatarId: merged.avatarId },
     user.leafPoints,
     { themeId: current.themeId, stickerId: current.stickerId, avatarId: current.avatarId },
+    merged.purchasedThemes,
   );
   const prefs: UserPrefs = {
     ...merged,

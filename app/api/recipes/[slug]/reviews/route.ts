@@ -4,12 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { isPremium } from "@/lib/entitlements";
 import { parsePrefs } from "@/lib/profile";
 import { publicAuthor } from "@/lib/public-author";
+import { COOK_PROOF_PHOTO_MAX, isValidCookProofComment } from "@/lib/leaf-points";
 
 function mapReviews(
   rows: {
     id: string;
     rating: number;
     comment: string;
+    photo: string;
     createdAt: Date;
     userId: string;
     user: { handle: string | null; prefs: string };
@@ -22,6 +24,7 @@ function mapReviews(
       id: r.id,
       rating: r.rating,
       comment: r.comment,
+      cookPhoto: r.photo || "",
       createdAt: r.createdAt.toISOString(),
       author: publicAuthor(r.user),
       avatarId: prefs.avatarId,
@@ -60,17 +63,27 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   const recipe = await prisma.recipe.findUnique({ where: { slug }, select: { id: true, status: true } });
   if (!recipe || recipe.status !== "published") return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  const body = (await req.json()) as { rating?: number; comment?: string };
+  const body = (await req.json()) as { rating?: number; comment?: string; photo?: string };
   const rating = Number(body.rating);
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     return NextResponse.json({ error: "rating" }, { status: 400 });
   }
   const comment = String(body.comment ?? "").trim().slice(0, 800);
+  if (!isValidCookProofComment(comment)) {
+    return NextResponse.json({ error: "proof_comment" }, { status: 400 });
+  }
+  const photoRaw = String(body.photo ?? "");
+  const photo =
+    photoRaw.startsWith("data:image/") && photoRaw.length <= COOK_PROOF_PHOTO_MAX ? photoRaw : "";
 
   await prisma.recipeReview.upsert({
     where: { recipeId_userId: { recipeId: recipe.id, userId: user.id } },
-    update: { rating, comment },
-    create: { recipeId: recipe.id, userId: user.id, rating, comment },
+    update: {
+      rating,
+      comment,
+      ...(photo ? { photo } : {}),
+    },
+    create: { recipeId: recipe.id, userId: user.id, rating, comment, photo },
   });
 
   return NextResponse.json({ ok: true, reviews: await loadReviews(recipe.id, user.id) });

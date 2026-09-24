@@ -17,6 +17,18 @@ export type UserPrefs = {
   sex: SexPref;
   activity: ActivityPref;
   pregnant: boolean;
+  /** ISO date when academy leaf boost expires. */
+  academyBoostUntil: string;
+  /** Challenge ids unlocked via shop. */
+  unlockedChallenges: string[];
+  /** Shop-purchased badge skus. */
+  badges: string[];
+  /** Themes unlocked early via shop (ids). */
+  purchasedThemes: string[];
+  notifB12: boolean;
+  notifShop: boolean;
+  notifLeaf: boolean;
+  friendDiscoverable: boolean;
 };
 
 export const EMPTY_PREFS: UserPrefs = {
@@ -35,6 +47,14 @@ export const EMPTY_PREFS: UserPrefs = {
   sex: "",
   activity: "moderate",
   pregnant: false,
+  academyBoostUntil: "",
+  unlockedChallenges: [],
+  badges: [],
+  purchasedThemes: [],
+  notifB12: true,
+  notifShop: true,
+  notifLeaf: true,
+  friendDiscoverable: true,
 };
 
 const RULES: { key: keyof UserPrefs; terms: string[] }[] = [
@@ -62,6 +82,16 @@ export function parsePrefs(raw?: string | null): UserPrefs {
       sex: parsed.sex === "female" || parsed.sex === "male" || parsed.sex === "other" ? parsed.sex : "",
       activity: parsed.activity === "low" || parsed.activity === "high" ? parsed.activity : "moderate",
       pregnant: Boolean(parsed.pregnant),
+      academyBoostUntil: String(parsed.academyBoostUntil ?? ""),
+      unlockedChallenges: Array.isArray(parsed.unlockedChallenges)
+        ? parsed.unlockedChallenges.map(String)
+        : [],
+      badges: Array.isArray(parsed.badges) ? parsed.badges.map(String) : [],
+      purchasedThemes: Array.isArray(parsed.purchasedThemes) ? parsed.purchasedThemes.map(String) : [],
+      notifB12: parsed.notifB12 !== false,
+      notifShop: parsed.notifShop !== false,
+      notifLeaf: parsed.notifLeaf !== false,
+      friendDiscoverable: parsed.friendDiscoverable !== false,
     };
   } catch {
     return { ...EMPTY_PREFS };

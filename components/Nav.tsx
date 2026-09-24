@@ -51,6 +51,7 @@ export async function Nav() {
           { href: "/favoris", label: t("fav.hubTitle") },
           { href: "/historique", label: t("hist.title") },
           { href: "/comparer", label: t("cmp.title") },
+          { href: "/amis", label: t("friends.title") },
           { href: "/menu", label: t("menu.title") },
           { href: "/courses", label: t("shop.title") },
           { href: "/academie", label: t("nav.academy") },
@@ -59,6 +60,7 @@ export async function Nav() {
           { href: "/favoris", label: t("fav.hubTitle") },
           { href: "/historique", label: t("hist.title") },
           { href: "/comparer", label: t("cmp.title") },
+          { href: "/amis", label: t("friends.title") },
         ]
     : [
         { href: "/scan", label: t("nav.scan") },
@@ -69,12 +71,20 @@ export async function Nav() {
     <>
       <ThemeSync themeId={prefs?.themeId} />
       <header className="sticky top-0 z-20 border-b border-ink/8 bg-white/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-3 py-2.5 sm:px-4">
-          <Link href="/" className="display text-xl text-forest sm:text-2xl">
-            VitaVegan
+        <div className="mx-auto grid max-w-5xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4 sm:py-2.5">
+          <Link href="/" className="tap relative z-10 flex shrink-0 items-center gap-2" aria-label="Verdegan">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/verdegan-leaf-nav.png"
+              alt=""
+              width={36}
+              height={36}
+              className="h-8 w-8 shrink-0 object-contain sm:h-9 sm:w-9"
+            />
+            <span className="display text-lg leading-none text-forest sm:text-xl">Verdegan</span>
           </Link>
           <DesktopNav links={links} />
-          <div className="flex items-center gap-1.5 text-sm sm:gap-2">
+          <div className="flex shrink-0 items-center justify-end gap-1.5 text-sm sm:gap-2">
             <div className="hidden md:block">
               <LanguageSwitcher />
             </div>

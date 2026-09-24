@@ -18,7 +18,7 @@ export const VEGAN_GUIDE: GuideSection[] = [
       "Scanne les étiquettes : la liste d’ingrédients > le packaging vert.",
       "Progresser vaut mieux que viser la perfection du premier jour.",
     ],
-    tip: "VitaVegan t’aide au rayon et en cuisine — les jauges sont des repères, pas un diagnostic.",
+    tip: "Verdegan t’aide au rayon et en cuisine — les jauges sont des repères, pas un diagnostic.",
   },
   {
     id: "courses",
@@ -30,7 +30,7 @@ export const VEGAN_GUIDE: GuideSection[] = [
       "Vin, bière, bonbons, chips « fromage », viennoiseries : vérifie.",
       "Les boissons végétales enrichies (calcium, B12, D) sont pratiques au petit-déj.",
     ],
-    tip: "Le scan VitaVegan classe vite animal certain / doute / végétal.",
+    tip: "Le scan Verdegan classe vite animal certain / doute / végétal.",
   },
   {
     id: "assiette",

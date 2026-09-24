@@ -1,7 +1,7 @@
-import { BEAUTY_BRANDS, type BeautyBrand, type BeautyVeganStatus } from "@/data/beauty-brands";
+﻿import { BEAUTY_BRANDS, type BeautyBrand, type BeautyVeganStatus } from "@/data/beauty-brands";
 import type { CrueltyStatus } from "@/lib/cruelty";
 
-const HEADERS = { "User-Agent": "VitaVegan/1.0 (https://vitavegan.app)" };
+const HEADERS = { "User-Agent": "Verdegan/1.0 (https://verdegan.app)" };
 
 export type BeautyBrandHit = {
   name: string;

@@ -57,7 +57,9 @@ export async function POST(req: Request) {
 
   if (body.barcode) {
     const resolved = await resolveBarcode(body.barcode, lang, session.user.id, quota.prefs);
-    if (resolved) return NextResponse.json({ ...resolved, remaining });
+    if (resolved) {
+      return NextResponse.json({ ...resolved, remaining });
+    }
     return NextResponse.json(
       { error: "not_found", barcode: inspectBarcode(body.barcode), create: true, remaining },
       { status: 404 },

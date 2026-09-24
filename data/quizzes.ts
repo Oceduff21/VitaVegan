@@ -52,7 +52,7 @@ export const QUIZ_BANK: QuizQuestion[] = [
     prompt: "Le colorant E120 (carmin) est-il vegan ?",
     choices: [...OUI_NON],
     answerId: "non",
-    explanation: "Le carmin vient de la cochenille, un insecte. VitaVegan le classe animal certain.",
+    explanation: "Le carmin vient de la cochenille, un insecte. Verdegan le classe animal certain.",
   },
   {
     id: "steak-soja",

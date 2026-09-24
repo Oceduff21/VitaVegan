@@ -1,4 +1,4 @@
-import { trialEndFromNow } from "@/lib/entitlements";
+﻿import { trialEndFromNow } from "@/lib/entitlements";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   if (!isStrongPassword(password)) return NextResponse.json({ error: "password" }, { status: 400 });
   const exists = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
   if (exists) return NextResponse.json({ error: "taken" }, { status: 409 });
-  const adminEmail = (process.env.ADMIN_EMAIL ?? "admin@vitavegan.app").toLowerCase();
+  const adminEmail = (process.env.ADMIN_EMAIL ?? "admin@verdegan.app").toLowerCase();
   const handle = await allocateHandle(fn);
   const user = await prisma.user.create({
     data: {

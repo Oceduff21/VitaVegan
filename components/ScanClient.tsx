@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -30,6 +30,8 @@ import { UserScannedBadge } from "@/components/UserScannedBadge";
 import { isEdible, kindI18nKey, showsCruelty, type ArticleKind } from "@/lib/article-kind";
 import { nutrientCoverage } from "@/lib/nutrition/gauges";
 import { scaleNutrients as scaleMap } from "@/lib/nutrition/scale";
+import { ScanPostActions } from "@/components/ScanPostActions";
+import { ShareScoreCard } from "@/components/ShareScoreCard";
 
 type ScanKind = "food" | "beauty" | ArticleKind;
 
@@ -72,7 +74,18 @@ type GoodsPayload = {
   analysis: { animalHits: IngredientHit[]; hits: IngredientHit[] };
 };
 
-const OFFLINE_KEY = "vitavegan-last-scans";
+const OFFLINE_KEY = "verdegan-last-scans";
+const LAST_COMPARE_KEY = "verdegan-last-compare-a";
+
+function rememberCompareBarcode(barcode?: string) {
+  const digits = (barcode ?? "").replace(/\D/g, "");
+  if (!digits) return;
+  try {
+    sessionStorage.setItem(LAST_COMPARE_KEY, digits);
+  } catch {
+    /* ignore */
+  }
+}
 
 function rememberOffline(entry: { name: string; score: number; cruelty?: string }) {
   try {
@@ -197,6 +210,7 @@ export function ScanClient({
         setKind("beauty");
         setBeauty(data);
         setHits(data.analysis.hits);
+        rememberCompareBarcode(data.product.barcode);
         rememberOffline({
           name: data.product.name,
           score: data.score.score,
@@ -207,11 +221,13 @@ export function ScanClient({
         setFood(data);
         setHits(data.analysis.hits);
         setGrams(100);
+        rememberCompareBarcode(data.product.barcode);
         rememberOffline({ name: data.product.name || "Scan", score: data.score.score });
       } else {
         setKind(data.kind as ArticleKind);
         setGoods(data);
         setHits(data.analysis.hits);
+        rememberCompareBarcode(data.product.barcode);
         rememberOffline({
           name: data.product.name,
           score: data.score.score,
@@ -552,6 +568,18 @@ export function ScanClient({
             </>
           ) : null}
           <ReportButton barcode={food.product.barcode} target={food.product.name} />
+          {food.product.barcode ? (
+            <>
+              <ScanPostActions
+                name={food.product.name || food.product.barcode}
+                barcode={food.product.barcode}
+                kind="food"
+                score={food.score.score}
+                image={food.product.image ?? undefined}
+              />
+              <ShareScoreCard score={food.score.score} productName={food.product.name || food.product.barcode} />
+            </>
+          ) : null}
         </ScanResultLayout>
       ) : null}
 
@@ -605,6 +633,18 @@ export function ScanClient({
           <p className="text-sm text-ink/75 line-clamp-2">{beauty.score.why}</p>
           <DisambiguateIngredient hits={hits} onChoose={onChoose} />
           <ReportButton barcode={beauty.product.barcode} target={beauty.product.name} />
+          {beauty.product.barcode ? (
+            <>
+              <ScanPostActions
+                name={beauty.product.name || beauty.product.barcode}
+                barcode={beauty.product.barcode}
+                kind="cosmetic"
+                score={beauty.score.score}
+                image={beauty.product.image ?? undefined}
+              />
+              <ShareScoreCard score={beauty.score.score} productName={beauty.product.name || beauty.product.barcode} />
+            </>
+          ) : null}
         </ScanResultLayout>
       ) : null}
 

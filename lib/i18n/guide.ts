@@ -14,7 +14,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Read labels: ingredient list > green packaging.",
         "Progress beats day-one perfection.",
       ],
-      tip: "VitaVegan helps in the aisle and kitchen — gauges are guides, not a diagnosis.",
+      tip: "Verdegan helps in the aisle and kitchen — gauges are guides, not a diagnosis.",
     },
     de: {
       title: "Wo anfangen",
@@ -25,7 +25,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Lies Etiketten: Zutatenliste > grüne Verpackung.",
         "Fortschritt ist besser als Perfektion am ersten Tag.",
       ],
-      tip: "VitaVegan hilft im Regal und in der Küche — die Anzeigen sind Orientierung, keine Diagnose.",
+      tip: "Verdegan hilft im Regal und in der Küche — die Anzeigen sind Orientierung, keine Diagnose.",
     },
     es: {
       title: "Por dónde empezar",
@@ -36,7 +36,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Lee etiquetas: lista de ingredientes > envase verde.",
         "Progresar vale más que la perfección desde el primer día.",
       ],
-      tip: "VitaVegan te ayuda en la tienda y en la cocina — los indicadores son referencias, no un diagnóstico.",
+      tip: "Verdegan te ayuda en la tienda y en la cocina — los indicadores son referencias, no un diagnóstico.",
     },
     it: {
       title: "Da dove iniziare",
@@ -47,7 +47,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Leggi le etichette: lista ingredienti > packaging verde.",
         "Progredire vale più della perfezione dal primo giorno.",
       ],
-      tip: "VitaVegan ti aiuta al supermercato e in cucina — i gauge sono riferimenti, non una diagnosi.",
+      tip: "Verdegan ti aiuta al supermercato e in cucina — i gauge sono riferimenti, non una diagnosi.",
     },
     nl: {
       title: "Waar beginnen",
@@ -58,7 +58,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Scan etiketten: ingrediëntenlijst > groene verpakking.",
         "Vooruitgang is beter dan perfectie op dag één.",
       ],
-      tip: "VitaVegan helpt in het schap en in de keuken — meters zijn richtlijnen, geen diagnose.",
+      tip: "Verdegan helpt in het schap en in de keuken — meters zijn richtlijnen, geen diagnose.",
     },
     pt: {
       title: "Por onde começar",
@@ -69,7 +69,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Lê rótulos: lista de ingredientes > embalagem verde.",
         "Progredir vale mais do que a perfeição no primeiro dia.",
       ],
-      tip: "A VitaVegan ajuda no supermercado e na cozinha — os indicadores são referências, não um diagnóstico.",
+      tip: "A Verdegan ajuda no supermercado e na cozinha — os indicadores são referências, não um diagnóstico.",
     },
     pl: {
       title: "Od czego zacząć",
@@ -80,7 +80,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Czytaj etykiety: skład > zielone opakowanie.",
         "Postęp jest lepszy niż perfekcja od pierwszego dnia.",
       ],
-      tip: "VitaVegan pomaga w sklepie i w kuchni — wskaźniki to wskazówki, nie diagnoza.",
+      tip: "Verdegan pomaga w sklepie i w kuchni — wskaźniki to wskazówki, nie diagnoza.",
     },
   },
   courses: {
@@ -93,7 +93,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Wine, beer, sweets, “cheese” crisps, pastries: double-check.",
         "Fortified plant drinks (calcium, B12, D) are handy at breakfast.",
       ],
-      tip: "VitaVegan scan ranks animal-certain / unsure / plant-certain fast.",
+      tip: "Verdegan scan ranks animal-certain / unsure / plant-certain fast.",
     },
     de: {
       title: "Einkauf & Etiketten",
@@ -104,7 +104,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Wein, Bier, Süßigkeiten, „Käse“-Chips, Gebäck: nachprüfen.",
         "Angereicherte Pflanzendrinks (Calcium, B12, D) sind praktisch zum Frühstück.",
       ],
-      tip: "Der VitaVegan-Scan ordnet schnell tierisch sicher / unsicher / pflanzlich sicher ein.",
+      tip: "Der Verdegan-Scan ordnet schnell tierisch sicher / unsicher / pflanzlich sicher ein.",
     },
     es: {
       title: "Compras y etiquetas",
@@ -115,7 +115,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Vino, cerveza, caramelos, patatas «queso», bollería: comprueba.",
         "Bebidas vegetales enriquecidas (calcio, B12, D) son prácticas en el desayuno.",
       ],
-      tip: "El escaneo VitaVegan clasifica rápido animal seguro / duda / vegetal seguro.",
+      tip: "El escaneo Verdegan clasifica rápido animal seguro / duda / vegetal seguro.",
     },
     it: {
       title: "Spesa ed etichette",
@@ -126,7 +126,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Vino, birra, caramelle, patatine «formaggio», viennoiserie: verifica.",
         "Bevande vegetali arricchite (calcio, B12, D) sono comode a colazione.",
       ],
-      tip: "La scansione VitaVegan classifica velocemente animale certo / dubbio / vegetale certo.",
+      tip: "La scansione Verdegan classifica velocemente animale certo / dubbio / vegetale certo.",
     },
     nl: {
       title: "Boodschappen & etiketten",
@@ -137,7 +137,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Wijn, bier, snoep, «kaas»-chips, gebak: controleren.",
         "Verrijkte plantdranken (calcium, B12, D) zijn handig bij het ontbijt.",
       ],
-      tip: "VitaVegan-scan rangschikt snel dier zeker / twijfel / plant zeker.",
+      tip: "Verdegan-scan rangschikt snel dier zeker / twijfel / plant zeker.",
     },
     pt: {
       title: "Compras e rótulos",
@@ -148,7 +148,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Vinho, cerveja, doces, batatas «queijo», pastelaria: confirma.",
         "Bebidas vegetais enriquecidas (cálcio, B12, D) são práticas ao pequeno-almoço.",
       ],
-      tip: "O scan VitaVegan classifica rápido animal certo / dúvida / vegetal certo.",
+      tip: "O scan Verdegan classifica rápido animal certo / dúvida / vegetal certo.",
     },
     pl: {
       title: "Zakupy i etykiety",
@@ -159,7 +159,7 @@ const BANK: Record<string, Partial<Record<Locale, LocSection>>> = {
         "Wino, piwo, słodycze, chipsy «serowe», wypieki: sprawdź.",
         "Wzbogacone napoje roślinne (wapń, B12, D) są wygodne na śniadanie.",
       ],
-      tip: "Skan VitaVegan szybko klasyfikuje zwierzęce pewne / wątpliwe / roślinne pewne.",
+      tip: "Skan Verdegan szybko klasyfikuje zwierzęce pewne / wątpliwe / roślinne pewne.",
     },
   },
   assiette: {

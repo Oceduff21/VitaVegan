@@ -1,4 +1,4 @@
-import { analyzeIngredients } from "@/lib/vegan/analyze";
+﻿import { analyzeIngredients } from "@/lib/vegan/analyze";
 import { compassionScore } from "@/lib/score/compassion";
 import { barcodeCandidates, inspectBarcode, type BarcodeInfo } from "@/lib/barcode";
 import { classifyArticleKind, type ArticleKind } from "@/lib/article-kind";
@@ -20,7 +20,7 @@ export type GoodsProduct = {
   veganLabel: boolean | null;
 };
 
-const HEADERS = { "User-Agent": "VitaVegan/1.0 (https://vitavegan.app)" };
+const HEADERS = { "User-Agent": "Verdegan/1.0 (https://verdegan.app)" };
 const FIELDS =
   "product_name,product_name_fr,product_name_en,brands,image_front_small_url,image_url,ingredients_text,ingredients_text_fr,ingredients_text_en,labels_tags,ingredients_analysis_tags,categories_tags,code";
 

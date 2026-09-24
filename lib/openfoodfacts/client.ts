@@ -1,4 +1,4 @@
-import type { NutrientMap } from "@/data/daily-needs";
+﻿import type { NutrientMap } from "@/data/daily-needs";
 import { analyzeIngredients } from "@/lib/vegan/analyze";
 import { compassionScore } from "@/lib/score/compassion";
 import { barcodeCandidates, inspectBarcode, type BarcodeInfo } from "@/lib/barcode";
@@ -113,7 +113,7 @@ function mapProduct(p: Record<string, unknown>, fallbackCode: string, lang: Loca
   };
 }
 
-const OFF_HEADERS = { "User-Agent": "VitaVegan/1.0 (https://vitavegan.app)" };
+const OFF_HEADERS = { "User-Agent": "Verdegan/1.0 (https://verdegan.app)" };
 const FIELDS =
   "product_name,product_name_fr,product_name_en,product_name_de,product_name_es,product_name_it,product_name_nl,product_name_pt,product_name_pl,brands,image_front_small_url,image_url,ingredients_text,ingredients_text_fr,ingredients_text_en,ingredients_text_de,ingredients_text_es,ingredients_text_it,ingredients_text_nl,ingredients_text_pt,ingredients_text_pl,labels_tags,ingredients_analysis_tags,nutriments,code,countries_tags,ecoscore_grade,origins_tags,categories_tags";
 

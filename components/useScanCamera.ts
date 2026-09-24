@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
 import { cameraPermissionState, killAllCameras } from "@/lib/camera";
 
-const KEY = "vitavegan-camera-ok";
+const KEY = "verdegan-camera-ok";
 
 export type CamStatus = "need-allow" | "ready" | "live" | "denied";
 

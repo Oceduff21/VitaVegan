@@ -8,6 +8,7 @@ import {
   LEAF_STICKERS,
   LEAF_THEMES,
   avatarUnlocked,
+  foodAvatarCost,
   resolveLeafLevel,
   stickerUnlocked,
   themeUnlocked,
@@ -22,13 +23,16 @@ export function LeafStylePicker({
   photo,
   themeId,
   stickerId,
+  purchasedThemes,
 }: {
   leafPoints: number;
   avatarId: string;
   photo: string;
   themeId: string;
   stickerId: string;
+  purchasedThemes?: string[];
 }) {
+  const themesOwned = purchasedThemes ?? [];
   const { t } = useI18n();
   const router = useRouter();
   const [id, setId] = useState(avatarId || "pip");
@@ -86,7 +90,7 @@ export function LeafStylePicker({
   }
 
   function pickTheme(next: string) {
-    if (!themeUnlocked(next, leafPoints)) return;
+    if (!themeUnlocked(next, leafPoints, themesOwned)) return;
     setTheme(next);
     void save({ themeId: next });
   }
@@ -130,7 +134,7 @@ export function LeafStylePicker({
               <span className="line-clamp-2 text-center text-[0.65rem] font-medium leading-tight sm:text-xs">{t(m.nameKey)}</span>
               {locked ? (
                 <span className="absolute right-1 top-1 rounded-full bg-ink/80 px-1.5 py-0.5 text-[0.6rem] text-cream">
-                  {FOOD_AVATAR_MIN}
+                  {foodAvatarCost(m.id)}
                 </span>
               ) : null}
             </button>
@@ -194,7 +198,7 @@ export function LeafStylePicker({
         <h3 className="text-sm font-semibold text-ink/80">{t("leaf.themesTitle")}</h3>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {LEAF_THEMES.map((th) => {
-            const locked = !themeUnlocked(th.id, leafPoints);
+            const locked = !themeUnlocked(th.id, leafPoints, themesOwned);
             const on = theme === th.id;
             return (
               <button

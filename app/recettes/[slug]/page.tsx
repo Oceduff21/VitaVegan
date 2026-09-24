@@ -57,6 +57,7 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ s
       id: r.id,
       rating: r.rating,
       comment: r.comment,
+      cookPhoto: r.photo || "",
       createdAt: r.createdAt.toISOString(),
       author: publicAuthor(r.user),
       avatarId: prefs.avatarId,

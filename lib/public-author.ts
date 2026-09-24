@@ -3,7 +3,7 @@
 const HANDLE_RE = /^[a-z0-9_]{3,20}$/;
 
 const RESERVED = new Set([
-  "vitavegan",
+  "Verdegan",
   "support",
   "mod",
   "moderator",

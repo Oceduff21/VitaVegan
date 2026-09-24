@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import { Nav } from "@/components/Nav";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Providers } from "@/components/Providers";
 import { getLocale, getT } from "@/lib/i18n/server";
 import "./globals.css";
@@ -22,11 +23,15 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: {
       default: t("meta.title"),
-      template: "%s · VitaVegan",
+      template: "%s · Verdegan",
     },
     description: t("meta.desc"),
-    applicationName: "VitaVegan",
-    appleWebApp: { capable: true, title: "VitaVegan", statusBarStyle: "default" },
+    applicationName: "Verdegan",
+    appleWebApp: { capable: true, title: "Verdegan", statusBarStyle: "default" },
+    icons: {
+      icon: [{ url: "/icon.svg" }, { url: "/icon-512.png", sizes: "512x512", type: "image/png" }],
+      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    },
   };
 }
 
@@ -46,6 +51,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Nav />
           <main className="mx-auto w-full max-w-5xl px-3 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-5 md:px-6 md:py-8 md:pb-8">
             {children}
+            <SiteFooter />
           </main>
         </Providers>
       </body>

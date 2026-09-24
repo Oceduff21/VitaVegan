@@ -5,8 +5,18 @@ import {
   type PulseRecipe,
 } from "@/lib/recipe-pulse";
 
-/** Points feuille — plant-based karma; uses TBD later (badges, unlocks…). */
+/** Points feuille — plant-based karma; spend in the leaf shop (badges, themes, boosts). */
 export const RECIPE_LEAF_POINTS = 10;
+
+/** Min comment length to validate a cook and earn leaf points. */
+export const COOK_PROOF_MIN_CHARS = 24;
+
+/** Max data-URL length for optional cook photo (~compressed JPEG). */
+export const COOK_PROOF_PHOTO_MAX = 420_000;
+
+export function isValidCookProofComment(comment: string): boolean {
+  return comment.trim().length >= COOK_PROOF_MIN_CHARS;
+}
 
 export type LeafPointsAward = {
   earned: number;

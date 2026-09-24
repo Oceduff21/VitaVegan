@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "premium" }, { status: 402 });
   }
   const body = (await req.json()) as {
-    items?: { text: string; recipeSlug?: string }[];
+    items?: { text: string; recipeSlug?: string; barcode?: string; kind?: string; source?: string }[];
     id?: string;
     inFridge?: boolean;
     done?: boolean;
@@ -48,6 +48,9 @@ export async function POST(req: Request) {
       userId: session.user.id,
       text: i.text.trim(),
       recipeSlug: i.recipeSlug ?? "",
+      barcode: (i.barcode ?? "").replace(/\D/g, ""),
+      kind: i.kind ?? "",
+      source: i.source ?? "manual",
     })),
   });
   return NextResponse.json({ ok: true });

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AnimalScore } from "@/components/score/AnimalScore";
 import { kindI18nKey } from "@/lib/article-kind";
+import { CompareVsLinks } from "@/components/CompareVsLinks";
 
 export type FavProduct = {
   kind: string;
@@ -32,11 +33,8 @@ function ProductList({
   return (
     <ul className="flex flex-col gap-2">
       {items.map((f) => (
-        <li key={`${f.kind}-${f.barcode}`}>
-          <Link
-            href={`/comparer?a=${encodeURIComponent(f.barcode)}`}
-            className="flex items-center gap-3 rounded-2xl bg-white px-3 py-2.5 sm:px-4 sm:py-3"
-          >
+        <li key={`${f.kind}-${f.barcode}`} className="rounded-2xl bg-white px-3 py-2.5 sm:px-4 sm:py-3">
+          <Link href={`/comparer?a=${encodeURIComponent(f.barcode)}`} className="flex items-center gap-3">
             {f.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={f.image} alt={f.name || f.barcode} className="h-12 w-12 shrink-0 rounded-lg object-cover" />
@@ -50,6 +48,9 @@ function ProductList({
             </div>
             <AnimalScore score={f.veganScore || 3} size={28} showLabel={false} />
           </Link>
+          <div className="mt-1 flex justify-end">
+            <CompareVsLinks barcode={f.barcode} />
+          </div>
         </li>
       ))}
     </ul>

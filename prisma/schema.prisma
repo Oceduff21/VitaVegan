@@ -24,7 +24,7 @@ model User {
   subStatus        String?
   scansToday       Int       @default(0)
   scansDate        String?
-  /** Plant-based points earned by cooking (uses TBD). */
+  /** Plant-based points earned by cooking / missions; spent in the leaf shop. */
   leafPoints       Int       @default(0)
   trialEndsAt      DateTime?
   createdAt        DateTime  @default(now())
@@ -37,6 +37,15 @@ model User {
   productFavs      ProductFav[]
   shoppingItems    ShoppingItem[]
   reports          Report[]
+  leafSpends       LeafSpend[]
+  notifications    Notification[]
+  dailyMissions    DailyMission[]
+  weekMealSlots    WeekMealSlot[]
+  contributions    ProductContribution[]
+  friendshipsOut   Friendship[]  @relation("FriendshipFrom")
+  friendshipsIn    Friendship[]  @relation("FriendshipTo")
+  sharesSent       RecipeShare[] @relation("ShareFrom")
+  sharesReceived   RecipeShare[] @relation("ShareTo")
 }
 
 model Recipe {
@@ -69,15 +78,19 @@ model Recipe {
 }
 
 model RecipeReview {
-  id        String   @id @default(cuid())
-  recipeId  String
-  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rating    Int
-  comment   String   @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  recipeId      String
+  recipe        Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating        Int
+  comment       String   @default("")
+  /** Optional cook photo (data URL or path). */
+  photo         String   @default("")
+  /** Local YYYY-MM-DD of last leaf-point award for cooking this recipe. */
+  leafAwardedOn String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([recipeId, userId])
 }
@@ -177,6 +190,9 @@ model ShoppingItem {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   text       String
   recipeSlug String   @default("")
+  barcode    String   @default("")
+  kind       String   @default("")
+  source     String   @default("manual")
   inFridge   Boolean  @default(false)
   done       Boolean  @default(false)
   createdAt  DateTime @default(now())
@@ -192,4 +208,104 @@ model Report {
   message   String
   status    String   @default("pending")
   createdAt DateTime @default(now())
+}
+
+model LeafSpend {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sku       String
+  cost      Int
+  qty       Int      @default(1)
+  meta      String   @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([userId, sku])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String   @default("")
+  href      String   @default("")
+  payload   String   @default("{}")
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model DailyMission {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String
+  code      String
+  progress  Int      @default(0)
+  target    Int      @default(1)
+  reward    Int      @default(5)
+  claimedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date, code])
+}
+
+model WeekMealSlot {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart  String
+  dayIndex   Int
+  slot       String
+  recipeSlug String   @default("")
+  label      String   @default("")
+  barcode    String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, weekStart, dayIndex, slot])
+}
+
+model ProductContribution {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barcode         String   @default("")
+  kind            String   @default("food")
+  name            String
+  brand           String   @default("")
+  ingredientsText String   @default("")
+  image           String   @default("")
+  status          String   @default("pending")
+  catalogId       String?
+  createdAt       DateTime @default(now())
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userId    String
+  peerId    String
+  from      User     @relation("FriendshipFrom", fields: [userId], references: [id], onDelete: Cascade)
+  to        User     @relation("FriendshipTo", fields: [peerId], references: [id], onDelete: Cascade)
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+
+  @@unique([userId, peerId])
+  @@index([peerId, status])
+}
+
+model RecipeShare {
+  id         String   @id @default(cuid())
+  recipeSlug String
+  fromId     String
+  toId       String?
+  from       User     @relation("ShareFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to         User?    @relation("ShareTo", fields: [toId], references: [id], onDelete: Cascade)
+  message    String   @default("")
+  token      String?  @unique
+  createdAt  DateTime @default(now())
+
+  @@index([toId, createdAt])
 }

@@ -11,8 +11,11 @@ import { getT } from "@/lib/i18n/server";
 import { NutrientGauges } from "@/components/dashboard/NutrientGauges";
 import { ShortcutPills } from "@/components/ShortcutPills";
 import { ReminderBanners } from "@/components/ReminderBanners";
+import { DailyQuestionCard } from "@/components/DailyQuestionCard";
+import { HomeNotifications } from "@/components/HomeNotifications";
 import { buildReminders } from "@/lib/reminders";
 import { resolveLeafLevel } from "@/lib/leaf-rewards";
+import { unreadNotifications } from "@/lib/notifications";
 
 /** Compact “today” hub for signed-in premium users on the home page. */
 export async function HomeDayHub() {
@@ -34,13 +37,24 @@ export async function HomeDayHub() {
   const totals = todayLogs.length ? sumLogs(todayLogs.map((l) => l.nutrients)) : emptyNutrients();
   const gauges = buildGauges(totals, targets);
   const level = resolveLeafLevel(user.leafPoints);
+  const shoppingOpen = await prisma.shoppingItem.count({
+    where: { userId: user.id, done: false, inFridge: false },
+  });
   const reminders = buildReminders({
     locale,
     role: user.role,
     trialEndsAt: user.trialEndsAt,
     loggedToday: todayLogs.length > 0,
     gauges,
-  }).slice(0, 2);
+    leafPoints: user.leafPoints,
+    shoppingOpen,
+    notifPrefs: {
+      notifB12: prefs.notifB12,
+      notifShop: prefs.notifShop,
+      notifLeaf: prefs.notifLeaf,
+    },
+  }).slice(0, 3);
+  const notifs = prefs.notifLeaf ? await unreadNotifications(user.id, 3) : [];
 
   return (
     <section className="flex flex-col gap-3 rounded-2xl bg-white/80 p-3.5 ring-1 ring-ink/8 sm:gap-4 sm:rounded-3xl sm:p-5">
@@ -55,6 +69,16 @@ export async function HomeDayHub() {
           {t("home.hubFull")}
         </Link>
       </div>
+      <DailyQuestionCard />
+      <HomeNotifications
+        items={notifs.map((n) => ({
+          id: n.id,
+          title: n.title,
+          body: n.body,
+          href: n.href,
+          type: n.type,
+        }))}
+      />
       <ReminderBanners items={reminders} />
       <NutrientGauges gauges={gauges} compact showTips={false} />
       <ShortcutPills
@@ -62,6 +86,7 @@ export async function HomeDayHub() {
           { href: "/scan", label: t("nav.scan") },
           { href: "/courses", label: t("shop.title") },
           { href: "/historique", label: t("hist.title") },
+          { href: "/amis", label: t("friends.title") },
         ]}
       />
     </section>

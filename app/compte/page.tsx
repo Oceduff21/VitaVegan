@@ -10,6 +10,7 @@ import { getT } from "@/lib/i18n/server";
 import { isPremium, isTrialActive } from "@/lib/entitlements";
 import { parsePrefs } from "@/lib/profile";
 import { LeafStylePicker } from "@/components/LeafStylePicker";
+import { LeafShop } from "@/components/LeafShop";
 import { UserAvatar } from "@/components/avatars/UserAvatar";
 import { ShortcutPills } from "@/components/ShortcutPills";
 import { PwaInstallCard } from "@/components/PwaInstallCard";
@@ -164,7 +165,11 @@ export default async function ComptePage({
           photo={prefs.photo}
           themeId={prefs.themeId}
           stickerId={prefs.stickerId}
+          purchasedThemes={prefs.purchasedThemes}
         />
+        <div className="mt-4">
+          <LeafShop />
+        </div>
       </Accordion>
 
       <Accordion id="compte-prefs" title={t("account.sec.prefs")}>
@@ -180,6 +185,7 @@ export default async function ComptePage({
                     { href: "/favoris", label: t("fav.hubTitle") },
                     { href: "/historique", label: t("hist.title") },
                     { href: "/comparer", label: t("cmp.title") },
+                    { href: "/amis", label: t("friends.title") },
                     { href: "/menu", label: t("menu.title") },
                     { href: "/courses", label: t("shop.title") },
                     { href: "/academie", label: t("nav.academy") },
@@ -188,6 +194,7 @@ export default async function ComptePage({
                     { href: "/favoris", label: t("fav.hubTitle") },
                     { href: "/historique", label: t("hist.title") },
                     { href: "/comparer", label: t("cmp.title") },
+                    { href: "/amis", label: t("friends.title") },
                   ]
             }
           />

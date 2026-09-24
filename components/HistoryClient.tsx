@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
@@ -7,8 +7,9 @@ import { useI18n } from "@/components/i18n/LanguageProvider";
 import { UserScannedBadge } from "@/components/UserScannedBadge";
 import { ARTICLE_KINDS, kindI18nKey, normalizeArticleKind, showsCruelty } from "@/lib/article-kind";
 import { VerdictBadges } from "@/components/ui/StatusBadge";
+import { CompareVsLinks } from "@/components/CompareVsLinks";
 
-const OFFLINE_KEY = "vitavegan-last-scans";
+const OFFLINE_KEY = "verdegan-last-scans";
 
 type OfflineScan = { name: string; score: number; cruelty?: string };
 
@@ -112,17 +113,24 @@ export function HistoryClient({ events, favs }: { events: HistoryEvent[]; favs: 
         {favs.length === 0 ? <p className="text-sm text-ink/60">{t("hist.noFav")}</p> : null}
         <ul className="flex flex-col gap-2">
           {favs.map((f) => (
-            <li key={`${f.kind}-${f.barcode}`} className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
-              {f.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={f.image} alt={f.name || f.barcode} className="h-12 w-12 rounded-lg object-cover" />
-              ) : null}
-              <div className="min-w-0 flex-1">
-                <p className="text-[0.65rem] font-medium uppercase tracking-wide text-leaf">{t(kindI18nKey(f.kind))}</p>
-                <p className="font-medium">{f.name || f.barcode}</p>
-                <p className="font-mono text-xs text-ink/50">{f.barcode}</p>
+            <li key={`${f.kind}-${f.barcode}`} className="rounded-2xl bg-white px-4 py-3">
+              <div className="flex items-center gap-3">
+                {f.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={f.image} alt={f.name || f.barcode} className="h-12 w-12 rounded-lg object-cover" />
+                ) : null}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[0.65rem] font-medium uppercase tracking-wide text-leaf">{t(kindI18nKey(f.kind))}</p>
+                  <p className="font-medium">{f.name || f.barcode}</p>
+                  <p className="font-mono text-xs text-ink/50">{f.barcode}</p>
+                </div>
+                <AnimalScore score={f.veganScore || 3} size={28} showLabel={false} />
               </div>
-              <AnimalScore score={f.veganScore || 3} size={28} showLabel={false} />
+              {f.barcode ? (
+                <div className="mt-1.5 flex justify-end">
+                  <CompareVsLinks barcode={f.barcode} />
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -179,11 +187,7 @@ export function HistoryClient({ events, favs }: { events: HistoryEvent[]; favs: 
                   <p className="mt-1 text-sm text-ink/55">{e.veganWhy}</p>
                   <div className="mt-1 flex items-center justify-between gap-2">
                     <p className="text-xs text-ink/45">{when(e.createdAt)}</p>
-                    {e.barcode ? (
-                      <Link href={`/comparer?a=${e.barcode}`} className="text-xs underline">
-                        {t("cmp.title")}
-                      </Link>
-                    ) : null}
+                    {e.barcode ? <CompareVsLinks barcode={e.barcode} /> : null}
                   </div>
                 </li>
               ))}

@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { createContext, useContext, useMemo } from "react";
 import { isLocale, translate, type Locale } from "@/lib/i18n/dictionaries";
 import { LANG_COOKIE } from "@/lib/i18n/cookie";
 
-const STORAGE = "vitavegan-lang";
+const STORAGE = "verdegan-lang";
 
 type I18n = {
   locale: Locale;

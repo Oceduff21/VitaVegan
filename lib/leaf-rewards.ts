@@ -29,11 +29,26 @@ export const LEAF_STICKERS = [
 
 export type LeafStickerId = (typeof LEAF_STICKERS)[number]["id"];
 
-/** Food mascots unlock at Cuisinier feuille. */
+/** Food mascots unlock with progressive thresholds. */
 export const FOOD_AVATAR_MIN = 100;
 
+export const FOOD_AVATAR_COST: Record<string, number> = {
+  tofu: 100,
+  carotte: 200,
+  edamame: 300,
+  avocat: 400,
+  champi: 500,
+  banane: 650,
+  brocoli: 800,
+  aubergine: 1000,
+};
+
+export function foodAvatarCost(avatarId: string): number {
+  return FOOD_AVATAR_COST[avatarId] ?? FOOD_AVATAR_MIN;
+}
+
 export function resolveLeafLevel(points: number) {
-  let current = LEAF_LEVELS[0];
+  let current: (typeof LEAF_LEVELS)[number] = LEAF_LEVELS[0];
   for (const level of LEAF_LEVELS) {
     if (points >= level.min) current = level;
   }
@@ -53,7 +68,8 @@ export function isLeafStickerId(v: string | null | undefined): v is LeafStickerI
   return !!v && LEAF_STICKERS.some((s) => s.id === v);
 }
 
-export function themeUnlocked(id: string, points: number) {
+export function themeUnlocked(id: string, points: number, purchasedThemes: string[] = []) {
+  if (purchasedThemes.includes(id)) return true;
   const t = LEAF_THEMES.find((x) => x.id === id);
   return Boolean(t && points >= t.min);
 }
@@ -67,17 +83,18 @@ export function avatarUnlocked(avatarId: string, points: number) {
   if (!isMascotId(avatarId)) return true;
   const m = MASCOTS.find((x) => x.id === avatarId);
   if (!m || m.group === "animal") return true;
-  return points >= FOOD_AVATAR_MIN;
+  return points >= foodAvatarCost(avatarId);
 }
 
 export function clampCosmeticPrefs(
   input: { themeId: string; stickerId: string; avatarId: string },
   points: number,
   previous?: { themeId: string; stickerId: string; avatarId: string },
+  purchasedThemes: string[] = [],
 ) {
-  const themeId = themeUnlocked(input.themeId, points)
+  const themeId = themeUnlocked(input.themeId, points, purchasedThemes)
     ? input.themeId
-    : previous && themeUnlocked(previous.themeId, points)
+    : previous && themeUnlocked(previous.themeId, points, purchasedThemes)
       ? previous.themeId
       : "default";
   const stickerId = stickerUnlocked(input.stickerId, points)

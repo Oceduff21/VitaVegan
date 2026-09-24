@@ -1,13 +1,14 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useI18n } from "@/components/i18n/LanguageProvider";
 import { prefersReducedMotion } from "@/lib/motion";
+import { PipGuide, PipSpeech } from "@/components/guide/PipGuide";
 
-const KEY = "vitavegan-onboarded";
+const KEY = "verdegan-onboarded";
 
-/** Anchored tour: scan CTA on home, then bottom nav. */
+/** Pip-led tour: scan CTA on home, badges, then nav / gauges. */
 export function OnboardingTour() {
   const { t } = useI18n();
   const path = usePathname();
@@ -58,8 +59,24 @@ export function OnboardingTour() {
   if (!open) return null;
 
   const steps = [
-    { title: t("onboard.1.title"), body: t("onboard.1.body"), anchor: "scan" as const },
-    { title: t("onboard.2.title"), body: t("onboard.2.body"), anchor: "nav" as const },
+    {
+      title: t("onboard.1.title"),
+      body: t("onboard.1.body"),
+      pose: "wave" as const,
+      anchor: "scan" as const,
+    },
+    {
+      title: t("onboard.2.title"),
+      body: t("onboard.2.body"),
+      pose: "speak" as const,
+      anchor: "badges" as const,
+    },
+    {
+      title: t("onboard.3.title"),
+      body: t("onboard.3.body"),
+      pose: "cheer" as const,
+      anchor: "nav" as const,
+    },
   ];
   const current = steps[step]!;
   const last = step >= steps.length - 1;
@@ -79,7 +96,7 @@ export function OnboardingTour() {
           }}
         />
       ) : null}
-      {step === 1 ? (
+      {step === 2 ? (
         <div
           className="pointer-events-none absolute inset-x-3 z-[81] rounded-[1.35rem] ring-4 ring-leaf/80 md:hidden"
           style={{
@@ -92,7 +109,7 @@ export function OnboardingTour() {
 
       <div
         className={`absolute inset-x-0 z-[82] flex justify-center p-4 ${
-          step === 1 ? "bottom-[5.5rem] md:bottom-auto md:top-1/3" : "bottom-8 sm:bottom-auto sm:top-1/3"
+          step === 2 ? "bottom-[5.5rem] md:bottom-auto md:top-[18%]" : "bottom-8 sm:bottom-auto sm:top-[18%]"
         }`}
       >
         <div
@@ -103,10 +120,14 @@ export function OnboardingTour() {
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-leaf">
             {t("onboard.kicker").replace("{n}", String(step + 1)).replace("{total}", String(steps.length))}
           </p>
-          <h2 id="onboard-title" className="mt-1 text-xl text-ink">
-            {current.title}
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-ink/70">{current.body}</p>
+          <div className="mt-3">
+            <PipSpeech name={t("pip.name")} pose={current.pose} size={78}>
+              <h2 id="onboard-title" className="text-lg font-semibold text-ink">
+                {current.title}
+              </h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-ink/70">{current.body}</p>
+            </PipSpeech>
+          </div>
           <div className="mt-5 flex gap-2">
             <button type="button" className="btn btn-secondary flex-1" onClick={() => close()}>
               {t("onboard.skip")}
@@ -125,6 +146,11 @@ export function OnboardingTour() {
               {last ? t("onboard.done") : t("onboard.next")}
             </button>
           </div>
+          {step === 0 ? (
+            <div className="mt-3 flex justify-center opacity-90">
+              <PipGuide pose="wave" size={36} className="md:hidden" />
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
