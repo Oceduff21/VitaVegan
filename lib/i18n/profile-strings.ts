@@ -31,7 +31,7 @@ const fr: Row = {
   "pref.saved": "Profil mis à jour.",
   "recipes.mine": "Selon mon profil (allergies / préférences)",
   "lock.title": "Essai terminé",
-  "lock.lead": "Sans abonnement tu gardes 5 scans/jour (aliment + cosmétique) : vegan ou cruelty-free. Jauges, recettes, quiz et favoris restent dans l’essai et l’abo.",
+  "lock.lead": "Sans abonnement tu gardes 3 scans/jour (aliment + cosmétique) : vegan ou cruelty-free. Jauges, recettes, quiz et favoris restent dans l’essai et l’abo.",
   "scan.infoOnly": "Mode info : vegan / cruelty-free. L’abo débloque jauges, recettes et le reste de l’app.",
   "scan.needAccount": "Crée un compte pour scanner.",
 };
@@ -65,7 +65,7 @@ const en: Row = {
   "pref.saved": "Profile updated.",
   "recipes.mine": "Match my profile (allergies / preferences)",
   "lock.title": "Trial ended",
-  "lock.lead": "Without a subscription you keep 5 scans/day (food + cosmetics): vegan or cruelty-free. Gauges, recipes, quizzes and saved recipes stay in the trial and the plan.",
+  "lock.lead": "Without a subscription you keep 3 scans/day (food + cosmetics): vegan or cruelty-free. Gauges, recipes, quizzes and saved recipes stay in the trial and the plan.",
   "scan.infoOnly": "Info mode: vegan / cruelty-free. Subscribe to unlock gauges, recipes and the rest of the app.",
   "scan.needAccount": "Create an account to scan.",
 };

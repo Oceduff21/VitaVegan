@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AnimalScore } from "@/components/score/AnimalScore";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { RecipeShareToFriend } from "@/components/RecipeShareToFriend";
 import { UserRecipeBadge } from "@/components/UserScannedBadge";
 import { RecipeCookPanel } from "@/components/recipes/RecipeCookPanel";
 import { RecipeReviews } from "@/components/recipes/RecipeReviews";
@@ -95,7 +96,12 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ s
         ) : null}
         <p className="mt-2 text-ink/70">{summary}</p>
       </div>
-      {session?.user ? <FavoriteButton recipeId={recipe.id} initial={Boolean(fav)} /> : null}
+      {session?.user ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <FavoriteButton recipeId={recipe.id} initial={Boolean(fav)} />
+          <RecipeShareToFriend recipeSlug={recipe.slug} recipeTitle={title} />
+        </div>
+      ) : null}
       <AnimalScore score={recipe.veganScore} />
       <p className="text-sm">{veganWhy}</p>
       <RecipeCookPanel

@@ -59,14 +59,17 @@ export async function POST(req: Request) {
   });
 
   if (toId) {
-    const me = await prisma.user.findUnique({ where: { id: session.user.id }, select: { handle: true } });
+    const [me, recipe] = await Promise.all([
+      prisma.user.findUnique({ where: { id: session.user.id }, select: { handle: true } }),
+      prisma.recipe.findUnique({ where: { slug: recipeSlug }, select: { title: true } }),
+    ]);
     await pushNotification({
       userId: toId,
       type: "share",
-      title: recipeSlug,
+      title: recipe?.title?.trim() || recipeSlug,
       body: me?.handle ? `@${me.handle}` : "",
       href: `/recettes/${recipeSlug}`,
-      payload: { token },
+      payload: { token, recipeSlug },
     });
   }
 

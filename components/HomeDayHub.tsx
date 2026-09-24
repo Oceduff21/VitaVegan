@@ -9,7 +9,6 @@ import { isPremium } from "@/lib/entitlements";
 import { localDate } from "@/lib/dates";
 import { getT } from "@/lib/i18n/server";
 import { NutrientGauges } from "@/components/dashboard/NutrientGauges";
-import { ShortcutPills } from "@/components/ShortcutPills";
 import { ReminderBanners } from "@/components/ReminderBanners";
 import { DailyQuestionCard } from "@/components/DailyQuestionCard";
 import { HomeNotifications } from "@/components/HomeNotifications";
@@ -17,7 +16,7 @@ import { buildReminders } from "@/lib/reminders";
 import { resolveLeafLevel } from "@/lib/leaf-rewards";
 import { unreadNotifications } from "@/lib/notifications";
 
-/** Compact “today” hub for signed-in premium users on the home page. */
+/** Compact “today” content for premium Accueil (wrapped by HomeSection). */
 export async function HomeDayHub() {
   const session = await auth();
   if (!session?.user?.id) return null;
@@ -53,22 +52,14 @@ export async function HomeDayHub() {
       notifShop: prefs.notifShop,
       notifLeaf: prefs.notifLeaf,
     },
-  }).slice(0, 3);
+  }).slice(0, 2);
   const notifs = prefs.notifLeaf ? await unreadNotifications(user.id, 3) : [];
 
   return (
-    <section className="flex flex-col gap-3 rounded-2xl bg-white/80 p-3.5 ring-1 ring-ink/8 sm:gap-4 sm:rounded-3xl sm:p-5">
-      <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-2">
-        <div className="min-w-0">
-          <h2 className="text-lg leading-tight sm:text-xl">{t("home.hubTitle")}</h2>
-          <p className="truncate text-xs text-ink/60 sm:text-sm">
-            {t(level.current.titleKey)} · {t("leaf.balance").replace("{n}", String(user.leafPoints))}
-          </p>
-        </div>
-        <Link href="/dashboard" className="self-start text-sm font-semibold text-forest underline">
-          {t("home.hubFull")}
-        </Link>
-      </div>
+    <div className="flex flex-col gap-3 sm:gap-4">
+      <p className="text-sm text-ink/60">
+        {t(level.current.titleKey)} · {t("leaf.balance").replace("{n}", String(user.leafPoints))}
+      </p>
       <DailyQuestionCard />
       <HomeNotifications
         items={notifs.map((n) => ({
@@ -80,15 +71,15 @@ export async function HomeDayHub() {
         }))}
       />
       <ReminderBanners items={reminders} />
-      <NutrientGauges gauges={gauges} compact showTips={false} />
-      <ShortcutPills
-        items={[
-          { href: "/scan", label: t("nav.scan") },
-          { href: "/courses", label: t("shop.title") },
-          { href: "/historique", label: t("hist.title") },
-          { href: "/amis", label: t("friends.title") },
-        ]}
-      />
-    </section>
+      <div className="rounded-2xl bg-white/80 p-3 ring-1 ring-ink/8 sm:p-4">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-sm font-semibold">{t("nav.gauges")}</p>
+          <Link href="/dashboard" className="text-xs font-semibold text-forest underline">
+            {t("home.hubFull")}
+          </Link>
+        </div>
+        <NutrientGauges gauges={gauges} compact showTips={false} />
+      </div>
+    </div>
   );
 }

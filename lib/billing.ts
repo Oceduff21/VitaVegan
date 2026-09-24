@@ -2,7 +2,7 @@ import { isPremium } from "@/lib/entitlements";
 import Stripe from "stripe";
 import { isSubscriber } from "@/auth";
 
-export const FREE_SCANS_PER_DAY = 5;
+export const FREE_SCANS_PER_DAY = 3;
 export { TRIAL_DAYS } from "@/lib/entitlements";
 
 export function stripeEnabled() {

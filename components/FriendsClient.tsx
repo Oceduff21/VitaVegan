@@ -13,8 +13,6 @@ export function FriendsClient() {
   const { t } = useI18n();
   const [data, setData] = useState<FriendsPayload | null>(null);
   const [handle, setHandle] = useState("");
-  const [recipeSlug, setRecipeSlug] = useState("");
-  const [shareTo, setShareTo] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -47,21 +45,6 @@ export function FriendsClient() {
       body: JSON.stringify({ action, handle: peerHandle.replace(/^@/, "") }),
     });
     await load();
-  }
-
-  async function shareRecipe() {
-    setMsg(null);
-    const res = await fetch("/api/recipe-share", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        recipeSlug,
-        toHandle: shareTo || undefined,
-      }),
-    });
-    const json = (await res.json()) as { link?: string };
-    setMsg(res.ok ? t("friends.shared") : t("friends.fail"));
-    if (res.ok && json.link) setMsg(`${t("friends.shared")} ${json.link}`);
   }
 
   return (
@@ -126,24 +109,7 @@ export function FriendsClient() {
         )}
       </section>
 
-      <section className="flex flex-col gap-2 rounded-2xl border border-dashed border-forest/25 p-4">
-        <h2 className="text-lg">{t("friends.shareRecipe")}</h2>
-        <input
-          value={recipeSlug}
-          onChange={(e) => setRecipeSlug(e.target.value)}
-          placeholder={t("friends.slugPh")}
-          className="field"
-        />
-        <input
-          value={shareTo}
-          onChange={(e) => setShareTo(e.target.value)}
-          placeholder={t("friends.shareToPh")}
-          className="field"
-        />
-        <button type="button" className="btn btn-secondary" onClick={() => void shareRecipe()}>
-          {t("friends.shareBtn")}
-        </button>
-      </section>
+      <p className="text-sm text-ink/55">{t("friends.shareHint")}</p>
 
       {msg ? <p className="text-sm text-forest">{msg}</p> : null}
     </div>

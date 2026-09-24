@@ -95,6 +95,18 @@ export function IconAcademy({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
+/** Friends / community */
+export function IconFriends({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="9" cy="8" r="3" />
+      <circle cx="16.5" cy="9" r="2.4" />
+      <path d="M3.5 18.5c.6-2.8 2.8-4.5 5.5-4.5s4.9 1.7 5.5 4.5" strokeLinecap="round" />
+      <path d="M14 14.2c1.7-.4 3.5.3 4.5 2.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /** Help / unknown */
 export function IconHelp({ className = "h-4 w-4" }: { className?: string }) {
   return (

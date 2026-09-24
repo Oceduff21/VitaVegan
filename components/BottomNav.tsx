@@ -5,20 +5,29 @@ import { usePathname } from "next/navigation";
 import { killAllCameras } from "@/lib/camera";
 import { useI18n } from "@/components/i18n/LanguageProvider";
 import { UserAvatar } from "@/components/avatars/UserAvatar";
-import { IconAccount, IconBeauty, IconHealth, IconRecipes, IconScan } from "@/components/nav-icons";
+import {
+  IconAccount,
+  IconAcademy,
+  IconBeauty,
+  IconRecipes,
+  IconScan,
+} from "@/components/nav-icons";
 import { navIsActive } from "@/lib/nav-active";
+
+type TabKey = "nav.scan" | "nav.recipes" | "nav.academy" | "nav.gauges" | "nav.cosmetics" | "nav.account";
 
 type Tab = {
   href: string;
-  key: "nav.scan" | "nav.recipes" | "nav.gauges" | "nav.cosmetics" | "nav.account";
+  key: TabKey;
   icon: typeof IconScan;
 };
 
+/** Premium: scan → cook → beauty → learn. Gauges via Accueil / desktop. */
 const FULL_TABS: Tab[] = [
   { href: "/scan", key: "nav.scan", icon: IconScan },
   { href: "/recettes", key: "nav.recipes", icon: IconRecipes },
-  { href: "/dashboard", key: "nav.gauges", icon: IconHealth },
   { href: "/cosmetiques", key: "nav.cosmetics", icon: IconBeauty },
+  { href: "/academie", key: "nav.academy", icon: IconAcademy },
   { href: "/compte", key: "nav.account", icon: IconAccount },
 ];
 

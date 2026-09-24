@@ -22,13 +22,28 @@ export function DailyQuestionCard() {
   const [picked, setPicked] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [earned, setEarned] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/daily-question");
-    if (!res.ok) return;
-    const json = (await res.json()) as State;
-    setState(json);
-  }, []);
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/daily-question");
+      if (!res.ok) {
+        setError(t("dailyq.loadFail"));
+        setState(null);
+        return;
+      }
+      const json = (await res.json()) as State;
+      setState(json);
+    } catch {
+      setError(t("dailyq.loadFail"));
+      setState(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -38,6 +53,7 @@ export function DailyQuestionCard() {
     if (!state || state.answered || busy) return;
     setBusy(true);
     setPicked(choiceId);
+    setError(null);
     try {
       const res = await fetch("/api/daily-question", {
         method: "POST",
@@ -52,7 +68,11 @@ export function DailyQuestionCard() {
         balance?: number | null;
         already?: boolean;
       };
-      if (!res.ok) return;
+      if (!res.ok) {
+        setError(t("dailyq.answerFail"));
+        setPicked(null);
+        return;
+      }
       if (typeof json.balance === "number") setBalance(json.balance);
       if (!json.already && typeof json.reward === "number") setEarned(json.reward);
       setState((prev) =>
@@ -66,9 +86,33 @@ export function DailyQuestionCard() {
             }
           : prev,
       );
+    } catch {
+      setError(t("dailyq.answerFail"));
+      setPicked(null);
     } finally {
       setBusy(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="rounded-2xl border border-leaf/25 bg-leaf/8 p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-leaf">{t("dailyq.title")}</p>
+        <p className="mt-2 text-sm text-ink/55">{t("dailyq.loading")}</p>
+      </div>
+    );
+  }
+
+  if (error && !state) {
+    return (
+      <div className="rounded-2xl border border-terracotta/25 bg-terracotta/5 p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-leaf">{t("dailyq.title")}</p>
+        <p className="mt-2 text-sm text-terracotta">{error}</p>
+        <button type="button" className="btn btn-secondary mt-2 text-sm" onClick={() => void load()}>
+          {t("dailyq.retry")}
+        </button>
+      </div>
+    );
   }
 
   if (!state) return null;
@@ -103,6 +147,8 @@ export function DailyQuestionCard() {
           );
         })}
       </div>
+
+      {error ? <p className="mt-2 text-sm text-terracotta">{error}</p> : null}
 
       {answered ? (
         <div className="mt-3 space-y-1.5">

@@ -48,19 +48,19 @@ export async function Nav() {
   const tools = session?.user
     ? premium
       ? [
+          { href: "/amis", label: t("friends.title") },
+          { href: "/dashboard", label: t("nav.gauges") },
           { href: "/favoris", label: t("fav.hubTitle") },
           { href: "/historique", label: t("hist.title") },
           { href: "/comparer", label: t("cmp.title") },
-          { href: "/amis", label: t("friends.title") },
           { href: "/menu", label: t("menu.title") },
           { href: "/courses", label: t("shop.title") },
-          { href: "/academie", label: t("nav.academy") },
         ]
       : [
+          { href: "/amis", label: t("friends.title") },
           { href: "/favoris", label: t("fav.hubTitle") },
           { href: "/historique", label: t("hist.title") },
           { href: "/comparer", label: t("cmp.title") },
-          { href: "/amis", label: t("friends.title") },
         ]
     : [
         { href: "/scan", label: t("nav.scan") },
