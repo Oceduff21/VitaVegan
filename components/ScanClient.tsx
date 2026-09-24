@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AnimalScore } from "@/components/score/AnimalScore";
+import { ScanResultLayout, ScanStickyHead } from "@/components/ScanResultLayout";
 import { DisambiguateIngredient } from "@/components/vegan/DisambiguateIngredient";
 import { CameraScanner } from "@/components/CameraScanner";
 import type { IngredientHit } from "@/lib/vegan/analyze";
@@ -25,9 +26,14 @@ import { VerdictBadges } from "@/components/ui/StatusBadge";
 import { useScanCamera } from "@/components/useScanCamera";
 import { BarcodeScanArt } from "@/components/BarcodeScanArt";
 import { IngredientsLabelScan } from "@/components/IngredientsLabelScan";
+import { UserScannedBadge } from "@/components/UserScannedBadge";
 import { isEdible, kindI18nKey, showsCruelty, type ArticleKind } from "@/lib/article-kind";
+import { nutrientCoverage } from "@/lib/nutrition/gauges";
+import { scaleNutrients as scaleMap } from "@/lib/nutrition/scale";
 
 type ScanKind = "food" | "beauty" | ArticleKind;
+
+type CommunityMeta = { userScanned?: boolean; scanCount?: number; source?: string };
 
 type FoodPayload = {
   kind: string;
@@ -67,16 +73,6 @@ type GoodsPayload = {
 };
 
 const OFFLINE_KEY = "vitavegan-last-scans";
-
-function scaleNutrients(n: Record<string, number | undefined> | undefined, grams: number) {
-  const f = grams / 100;
-  const out: Record<string, number> = {};
-  if (!n) return out;
-  for (const [k, v] of Object.entries(n)) {
-    if (typeof v === "number") out[k] = Math.round(v * f * 10) / 10;
-  }
-  return out;
-}
 
 function rememberOffline(entry: { name: string; score: number; cruelty?: string }) {
   try {
@@ -130,6 +126,7 @@ export function ScanClient({
   const [grams, setGrams] = useState(100);
   const [faved, setFaved] = useState(false);
   const [remaining, setRemaining] = useState(remainingProp);
+  const [community, setCommunity] = useState<CommunityMeta | null>(null);
 
   useEffect(() => {
     setRemaining(remainingProp);
@@ -148,6 +145,7 @@ export function ScanClient({
     setSaved(false);
     setFaved(false);
     setMissingCode(null);
+    setCommunity(null);
   }
 
   function newScan() {
@@ -170,6 +168,7 @@ export function ScanClient({
     setFood(null);
     setBeauty(null);
     setGoods(null);
+    setCommunity(null);
     try {
       const res = await fetch("/api/scan", {
         method: "POST",
@@ -190,6 +189,9 @@ export function ScanClient({
           setError(t("scan.fail"));
         }
         return;
+      }
+      if (data.community?.userScanned) {
+        setCommunity(data.community);
       }
       if (data.kind === "cosmetic") {
         setKind("beauty");
@@ -245,7 +247,12 @@ export function ScanClient({
 
   async function eatIt() {
     if (!food) return;
-    const nutrients = scaleNutrients(food.product.nutrients as Record<string, number | undefined>, grams);
+    const coverage = nutrientCoverage(food.product.nutrients);
+    if (coverage.isEmpty) {
+      setError(t("gauge.noNutrients"));
+      return;
+    }
+    const nutrients = scaleMap(food.product.nutrients, grams / 100);
     const res = await fetch("/api/food-log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -298,7 +305,7 @@ export function ScanClient({
   return (
     <div className="flex flex-col gap-5">
       <div className="text-center sm:text-left">
-        <h1 className="text-2xl sm:text-3xl">{t("scan.title")}</h1>
+        <h1 className="text-xl sm:text-3xl">{t("scan.title")}</h1>
         {!hasResult ? <p className="mt-2 text-sm text-ink/70 sm:max-w-2xl sm:text-base">{t("scan.lead")}</p> : null}
         {!fullApp ? <p className="mt-2 text-sm text-terracotta">{t("scan.infoOnly")}</p> : null}
         {brandHint && !hasResult ? (
@@ -309,6 +316,7 @@ export function ScanClient({
         <div className="mt-4">
           <ShortcutPills
             items={[
+              { href: "/favoris", label: t("fav.hubTitle") },
               { href: "/historique", label: t("hist.title") },
               { href: "/comparer", label: t("cmp.title") },
               { href: "/menu", label: t("menu.title") },
@@ -423,65 +431,72 @@ export function ScanClient({
       ) : null}
 
       {food && kind === "food" ? (
-        <article
-          id="scan-result"
+        <ScanResultLayout
           key={food.product.barcode || food.product.name}
-          className="anim-card-in flex scroll-mt-20 flex-col gap-4 rounded-3xl bg-white p-5"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-forest">{t("scan.modeFood")}</p>
-            {remaining !== "unlimited" ? (
-              <p className="text-[0.65rem] text-ink/45">
-                {t("scan.remaining")} : {remaining}
-              </p>
-            ) : null}
-          </div>
-          <div className="flex gap-3">
-            {food.product.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={food.product.image} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover sm:h-24 sm:w-24" />
-            ) : null}
-            <div className="min-w-0">
-              <h2 className="text-xl leading-tight sm:text-2xl">{food.product.name || t("scan.manualName")}</h2>
-              <p className="text-sm text-ink/60">{food.product.brands}</p>
-              <VerdictBadges
-                offVegan={food.product.offVegan}
-                vegan={
-                  food.score.score >= 4
-                    ? "yes"
-                    : food.score.score <= 2
-                      ? "no"
-                      : food.analysis.animalHits.length
-                        ? "mixed"
-                        : undefined
-                }
-                t={t}
-                className="mt-2"
-              />
+          sticky={
+            <ScanStickyHead
+              mode={t("scan.modeFood")}
+              name={food.product.name || t("scan.manualName")}
+              brand={food.product.brands}
+              image={food.product.image}
+              score={food.score.score}
+              community={
+                community?.userScanned ? (
+                  <UserScannedBadge scanCount={community.scanCount} className="mt-2" />
+                ) : null
+              }
+              badges={
+                <VerdictBadges
+                  offVegan={food.product.offVegan}
+                  vegan={
+                    food.score.score >= 4
+                      ? "yes"
+                      : food.score.score <= 2
+                        ? "no"
+                        : food.analysis.animalHits.length
+                          ? "mixed"
+                          : undefined
+                  }
+                  t={t}
+                />
+              }
+              remaining={
+                remaining !== "unlimited" ? (
+                  <p className="text-[0.65rem] text-ink/45">
+                    {t("scan.remaining")} : {remaining}
+                  </p>
+                ) : null
+              }
+            />
+          }
+          detailsLabel={t("scan.details")}
+          details={
+            <>
+              <p>{food.score.why}</p>
               {info?.digits ? (
-                <p className="mt-1 font-mono text-sm">
+                <p className="font-mono text-xs">
                   {t("scan.ref")} {info.format} · {info.gtin || info.digits}
                   {info.origin ? ` · ${t("scan.origin")} ${info.origin}` : ""}
                 </p>
               ) : null}
-            </div>
-          </div>
+              {food.analysis.animalHits.length > 0 ? (
+                <ul className="list-disc pl-5">
+                  {food.analysis.animalHits.map((h) => (
+                    <li key={h.original}>
+                      {h.original} — {h.why}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {food.planet ? <PlanetExtras planet={food.planet} /> : null}
+            </>
+          }
+        >
           <AllergenBanner hits={food.allergens ?? []} />
-          <AnimalScore score={food.score.score} />
-          <p>{food.score.why}</p>
-          {food.planet ? <PlanetExtras planet={food.planet} /> : null}
-          {food.analysis.animalHits.length > 0 ? (
-            <ul className="list-disc pl-5 text-sm">
-              {food.analysis.animalHits.map((h) => (
-                <li key={h.original}>
-                  {h.original} — {h.why}
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <p className="text-sm text-ink/75 line-clamp-2">{food.score.why}</p>
           <DisambiguateIngredient hits={hits} onChoose={onChoose} />
           {n && (n.energy || n.proteins) ? (
-            <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+            <div className="grid grid-cols-1 gap-2 text-sm min-[380px]:grid-cols-2 sm:grid-cols-4">
               <p>
                 {t("nutri.energy")} : {Math.round((n.energy ?? 0) * factor)} kcal/{grams}g
               </p>
@@ -498,6 +513,20 @@ export function ScanClient({
           ) : null}
           {fullApp ? (
             <>
+              {(() => {
+                const cov = nutrientCoverage(food.product.nutrients);
+                if (cov.isEmpty) {
+                  return <p className="rounded-2xl bg-terracotta/10 px-3 py-2 text-sm text-terracotta">{t("gauge.noNutrients")}</p>;
+                }
+                if (cov.isPartial) {
+                  return (
+                    <p className="rounded-2xl bg-sand/70 px-3 py-2 text-sm text-ink/70">
+                      {t("gauge.partialNutrients").replace("{n}", String(cov.present.length)).replace("{total}", "10")}
+                    </p>
+                  );
+                }
+                return null;
+              })()}
               <label className="text-sm">
                 {t("scan.portion")}
                 <input
@@ -511,91 +540,117 @@ export function ScanClient({
                 />
                 g
               </label>
-              <button type="button" onClick={() => void eatIt()} className="btn btn-accent w-full">
+              <button
+                type="button"
+                onClick={() => void eatIt()}
+                className="btn btn-accent w-full"
+                disabled={nutrientCoverage(food.product.nutrients).isEmpty}
+              >
                 {t("scan.eatGrams").replace("{n}", String(grams))}
               </button>
               {saved ? <p className="anim-bounce text-leaf">{t("scan.saved")}</p> : null}
             </>
           ) : null}
           <ReportButton barcode={food.product.barcode} target={food.product.name} />
-        </article>
+        </ScanResultLayout>
       ) : null}
 
       {beauty && kind === "beauty" ? (
-        <article id="scan-result" className="anim-card-in flex scroll-mt-20 flex-col gap-3 rounded-3xl bg-white p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-forest">{t("scan.modeBeauty")}</p>
-          <div className="flex gap-3">
-            {beauty.product.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={beauty.product.image} alt="" className="h-20 w-20 rounded-xl object-cover" />
-            ) : null}
-            <div>
-              <h2 className="text-xl">{beauty.product.name}</h2>
-              <p className="text-sm text-ink/60">{beauty.product.brands}</p>
-              <VerdictBadges
-                cruelty={beauty.product.cruelty}
-                vegan={
-                  beauty.score.score >= 4 && beauty.analysis.animalHits.length === 0
-                    ? "yes"
-                    : beauty.analysis.animalHits.length
-                      ? "no"
-                      : undefined
-                }
-                t={t}
-                className="mt-2"
-              />
-            </div>
-          </div>
-          <AnimalScore score={beauty.score.score} />
-          <p>{beauty.score.why}</p>
-          {beauty.analysis.animalHits.length > 0 ? (
-            <ul className="list-disc pl-5 text-sm">
-              {beauty.analysis.animalHits.map((h) => (
-                <li key={h.original}>
-                  {h.original} — {h.why}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-leaf">{t("cos.ok")}</p>
-          )}
+        <ScanResultLayout
+          sticky={
+            <ScanStickyHead
+              mode={t("scan.modeBeauty")}
+              name={beauty.product.name}
+              brand={beauty.product.brands}
+              image={beauty.product.image}
+              score={beauty.score.score}
+              community={
+                community?.userScanned ? (
+                  <UserScannedBadge scanCount={community.scanCount} className="mt-2" />
+                ) : null
+              }
+              badges={
+                <VerdictBadges
+                  cruelty={beauty.product.cruelty}
+                  vegan={
+                    beauty.score.score >= 4 && beauty.analysis.animalHits.length === 0
+                      ? "yes"
+                      : beauty.analysis.animalHits.length
+                        ? "no"
+                        : undefined
+                  }
+                  t={t}
+                />
+              }
+            />
+          }
+          detailsLabel={t("scan.details")}
+          details={
+            <>
+              <p>{beauty.score.why}</p>
+              {beauty.analysis.animalHits.length > 0 ? (
+                <ul className="list-disc pl-5">
+                  {beauty.analysis.animalHits.map((h) => (
+                    <li key={h.original}>
+                      {h.original} — {h.why}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-leaf">{t("cos.ok")}</p>
+              )}
+            </>
+          }
+        >
+          <p className="text-sm text-ink/75 line-clamp-2">{beauty.score.why}</p>
           <DisambiguateIngredient hits={hits} onChoose={onChoose} />
           <ReportButton barcode={beauty.product.barcode} target={beauty.product.name} />
-        </article>
+        </ScanResultLayout>
       ) : null}
 
       {goods ? (
-        <article id="scan-result" className="anim-card-in flex scroll-mt-20 flex-col gap-3 rounded-3xl bg-white p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-forest">{t(kindI18nKey(goods.kind))}</p>
-          <div className="flex gap-3">
-            {goods.product.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={goods.product.image} alt="" className="h-20 w-20 rounded-xl object-cover" />
-            ) : null}
-            <div>
-              <h2 className="text-xl">{goods.product.name}</h2>
-              <p className="text-sm text-ink/60">{goods.product.brands}</p>
-              {showsCruelty(goods.kind) ? (
-                <VerdictBadges cruelty={goods.product.cruelty} t={t} className="mt-2" />
+        <ScanResultLayout
+          sticky={
+            <ScanStickyHead
+              mode={t(kindI18nKey(goods.kind))}
+              name={goods.product.name}
+              brand={goods.product.brands}
+              image={goods.product.image}
+              score={goods.score.score}
+              community={
+                community?.userScanned ? (
+                  <UserScannedBadge scanCount={community.scanCount} className="mt-2" />
+                ) : null
+              }
+              badges={
+                showsCruelty(goods.kind) ? (
+                  <VerdictBadges cruelty={goods.product.cruelty} t={t} />
+                ) : null
+              }
+            />
+          }
+          detailsLabel={t("scan.details")}
+          details={
+            <>
+              <p>{goods.score.why}</p>
+              {goods.analysis.animalHits.length > 0 ? (
+                <ul className="list-disc pl-5">
+                  {goods.analysis.animalHits.map((h) => (
+                    <li key={h.original}>
+                      {h.original} — {h.why}
+                    </li>
+                  ))}
+                </ul>
+              ) : goods.score.score >= 4 ? (
+                <p className="text-leaf">{t("scan.noAnimal")}</p>
               ) : null}
-            </div>
-          </div>
-          <AnimalScore score={goods.score.score} />
-          <p>{goods.score.why}</p>
-          {goods.analysis.animalHits.length > 0 ? (
-            <ul className="list-disc pl-5 text-sm">
-              {goods.analysis.animalHits.map((h) => (
-                <li key={h.original}>
-                  {h.original} — {h.why}
-                </li>
-              ))}
-            </ul>
-          ) : goods.score.score >= 4 ? (
-            <p className="text-sm text-leaf">{t("scan.noAnimal")}</p>
-          ) : null}
+            </>
+          }
+        >
+          <p className="text-sm text-ink/75 line-clamp-2">{goods.score.why}</p>
           <DisambiguateIngredient hits={hits} onChoose={onChoose} />
           <ReportButton barcode={goods.product.barcode} target={goods.product.name} />
-        </article>
+        </ScanResultLayout>
       ) : null}
 
       {hasResult ? (
@@ -604,9 +659,16 @@ export function ScanClient({
             {t("scan.newScan")}
           </button>
           {canFav ? (
-            <button type="button" className="btn btn-secondary" onClick={() => void fav()}>
-              {faved ? t("hist.faved") : t("scan.addFav")}
-            </button>
+            <>
+              <button type="button" className="btn btn-secondary" onClick={() => void fav()}>
+                {faved ? t("hist.faved") : t("scan.addFav")}
+              </button>
+              {faved ? (
+                <Link href="/favoris" className="btn btn-ghost text-center text-sm">
+                  {t("scan.seeProductFavs")}
+                </Link>
+              ) : null}
+            </>
           ) : null}
           {food?.product.barcode ? (
             <Link href={`/comparer?a=${food.product.barcode}`} className="btn btn-secondary text-center">

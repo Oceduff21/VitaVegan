@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { MascotId } from "@/data/mascots";
 import { isMascotId } from "@/data/mascots";
+import { LEAF_STICKERS } from "@/lib/leaf-rewards";
 
 const INK = "#2a241c";
 
@@ -308,26 +309,44 @@ export function MascotSvg({ id }: { id: MascotId }) {
 export function UserAvatar({
   avatarId,
   photo,
+  stickerId,
   size = 48,
   className = "",
 }: {
   avatarId?: string | null;
   photo?: string | null;
+  stickerId?: string | null;
   size?: number;
   className?: string;
 }) {
   const id = isMascotId(avatarId) ? avatarId : "pip";
+  const sticker =
+    stickerId && stickerId !== "none"
+      ? LEAF_STICKERS.find((s) => s.id === stickerId)?.glyph
+      : null;
+  const badge = Math.max(14, Math.round(size * 0.38));
   return (
-    <span
-      className={`inline-flex shrink-0 overflow-hidden rounded-full ring-1 ring-ink/15 ${className}`}
-      style={{ width: size, height: size }}
-    >
-      {photo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={photo} alt="" className="h-full w-full object-cover" />
-      ) : (
-        <MascotSvg id={id} />
-      )}
+    <span className={`relative inline-flex shrink-0 ${className}`} style={{ width: size, height: size }}>
+      <span
+        className="inline-flex h-full w-full overflow-hidden rounded-full ring-1 ring-ink/15"
+        style={{ width: size, height: size }}
+      >
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <MascotSvg id={id} />
+        )}
+      </span>
+      {sticker ? (
+        <span
+          className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-cream ring-1 ring-forest/25"
+          style={{ width: badge, height: badge, fontSize: badge * 0.55 }}
+          aria-hidden
+        >
+          {sticker}
+        </span>
+      ) : null}
     </span>
   );
 }

@@ -33,11 +33,13 @@ export function BottomNav({
   signedIn = false,
   avatarId,
   photo,
+  stickerId,
 }: {
   fullApp?: boolean;
   signedIn?: boolean;
   avatarId?: string;
   photo?: string;
+  stickerId?: string;
 }) {
   const path = usePathname();
   const { t } = useI18n();
@@ -46,7 +48,7 @@ export function BottomNav({
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.55rem,env(safe-area-inset-bottom))] md:hidden"
-      aria-label="Principal"
+      aria-label={t("nav.main")}
     >
       <ul
         className={`nav-dock grid rounded-[1.35rem] bg-white/95 p-1 backdrop-blur-md ${
@@ -62,16 +64,16 @@ export function BottomNav({
                 href={tab.href}
                 onClick={() => killAllCameras()}
                 aria-current={active ? "page" : undefined}
-                className={`tap flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[1.05rem] px-1 text-center text-[0.7rem] font-semibold leading-tight ${
+                className={`tap flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[1.05rem] px-0.5 text-center text-[0.62rem] font-semibold leading-tight sm:px-1 sm:text-[0.72rem] ${
                   active ? "bg-leaf/22 text-forest" : "text-ink/50"
                 }`}
               >
                 {tab.href === "/compte" && signedIn ? (
-                  <UserAvatar avatarId={avatarId} photo={photo} size={22} />
+                  <UserAvatar avatarId={avatarId} photo={photo} stickerId={stickerId} size={22} />
                 ) : (
-                  <Icon className={`h-6 w-6 ${active ? "text-forest" : "text-ink/45"}`} />
+                  <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${active ? "text-forest" : "text-ink/45"}`} />
                 )}
-                {t(tab.key)}
+                <span className="max-w-full truncate px-0.5">{t(tab.key)}</span>
               </Link>
             </li>
           );

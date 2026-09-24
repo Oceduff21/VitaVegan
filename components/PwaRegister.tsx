@@ -2,13 +2,12 @@
 
 import { useEffect } from "react";
 
-/** Registers a lightweight SW for shell + last offline cache. */
+/** Registers SW for shell + offline navigations. */
 export function PwaRegister() {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
-    const url = "/sw.js";
-    void navigator.serviceWorker.register(url).catch(() => {
-      /* ignore — private mode / unsupported */
+    void navigator.serviceWorker.register("/sw.js").catch(() => {
+      /* ignore */
     });
   }, []);
   return null;

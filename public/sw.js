@@ -1,6 +1,6 @@
 /* VitaVegan — lightweight offline shell */
-const CACHE = "vitavegan-shell-v1";
-const SHELL = ["/", "/scan", "/cosmetiques", "/icon.svg", "/manifest.webmanifest"];
+const CACHE = "vitavegan-shell-v2";
+const SHELL = ["/", "/scan", "/cosmetiques", "/recettes", "/dashboard", "/academie", "/icon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -23,7 +23,6 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  // Network-first for navigations; cache-first for static icons
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req)

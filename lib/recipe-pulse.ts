@@ -61,12 +61,18 @@ export function isoWeek(d = new Date()) {
 }
 
 export function utcWeekDays(d = new Date()) {
-  const day = d.getUTCDay() || 7;
-  const monday = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day + 1));
+  // Local calendar week Mon–Sun (aligned with food-log dates)
+  const day = d.getDay() || 7;
+  const monday = new Date(d);
+  monday.setHours(0, 0, 0, 0);
+  monday.setDate(d.getDate() - day + 1);
   return Array.from({ length: 7 }, (_, i) => {
     const x = new Date(monday);
-    x.setUTCDate(monday.getUTCDate() + i);
-    return x.toISOString().slice(0, 10);
+    x.setDate(monday.getDate() + i);
+    const y = x.getFullYear();
+    const m = String(x.getMonth() + 1).padStart(2, "0");
+    const dd = String(x.getDate()).padStart(2, "0");
+    return `${y}-${m}-${dd}`;
   });
 }
 
@@ -171,5 +177,5 @@ export function buildChallenges(input: {
 }
 
 export function lowGaugeKeys(gauges: Gauge[]) {
-  return gauges.filter((g) => g.key === "b12" || g.key === "iron" || g.key === "iodine").filter((g) => g.ratio < 0.7);
+  return gauges.filter((g) => g.focus && g.displayRatio < 0.7);
 }

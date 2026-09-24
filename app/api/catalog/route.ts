@@ -32,6 +32,8 @@ export async function POST(req: Request) {
       veganScore: score.score,
       veganWhy: score.why,
       cruelty: body.kind === "cosmetic" || body.kind === "household" ? "unknown" : "unknown",
+      source: "user-created",
+      scanCount: 1,
       authorId: session?.user?.id ?? null,
     },
   });
@@ -47,5 +49,12 @@ export async function POST(req: Request) {
       cruelty: row.cruelty,
     });
   }
-  return NextResponse.json({ ok: true, id: row.id, analysis, score, author: session?.user?.id ?? null });
+  return NextResponse.json({
+    ok: true,
+    id: row.id,
+    analysis,
+    score,
+    author: session?.user?.id ?? null,
+    community: { userScanned: true, scanCount: 1, source: "user-created" },
+  });
 }

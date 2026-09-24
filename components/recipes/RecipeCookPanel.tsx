@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n/LanguageProvider";
 import { AddToShoppingButton } from "@/components/AddToShoppingButton";
 import { LogRecipeButton } from "@/components/LogRecipeButton";
-import { scaleIngredients, scaleNutrients } from "@/lib/recipe-scale";
+import { scaleIngredients } from "@/lib/recipe-scale";
 import type { RecipeTasting } from "@/data/recipe-serve";
 
 export function RecipeCookPanel({
@@ -44,14 +44,12 @@ export function RecipeCookPanel({
     () => scaleIngredients(ingredients, baseServings || 1, people),
     [ingredients, baseServings, people],
   );
-  const scaledNutrients = useMemo(
-    () => JSON.stringify(scaleNutrients(nutrients, baseServings || 1, people)),
-    [nutrients, baseServings, people],
-  );
 
   function bump(delta: number) {
     setPeople((n) => Math.min(max, Math.max(min, n + delta)));
   }
+
+  const kitchenTips = tasting.kitchenTips?.length ? tasting.kitchenTips : [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -69,7 +67,7 @@ export function RecipeCookPanel({
           </button>
         </div>
         <p className="text-xs text-ink/55">
-          {t("recipes.adapted").replace("{n}", String(baseServings))}
+          {t("recipes.peopleCookOnly").replace("{n}", String(baseServings))}
         </p>
       </section>
 
@@ -130,6 +128,18 @@ export function RecipeCookPanel({
         </ol>
       </section>
 
+      {kitchenTips.length > 0 ? (
+        <section className="rounded-2xl border border-leaf/30 bg-leaf/10 p-4">
+          <h2 className="text-lg font-semibold text-forest">{t("recipes.kitchenTips")}</h2>
+          <p className="mt-1 text-xs text-ink/55">{t("recipes.kitchenTipsLead")}</p>
+          <ul className="mt-2 list-disc pl-5 text-sm text-ink/80">
+            {kitchenTips.map((tip) => (
+              <li key={tip}>{tip}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="recipe-taste">
         <h2 className="mb-3 text-2xl">{t("recipes.tasting")}</h2>
         {tasting.tip ? (
@@ -162,8 +172,9 @@ export function RecipeCookPanel({
           <AddToShoppingButton slug={slug} items={scaled} />
           <LogRecipeButton
             slug={slug}
-            label={`${title} (${people} ${t("recipes.people")})`}
-            nutrients={scaledNutrients}
+            title={title}
+            nutrients={nutrients}
+            servings={baseServings || 1}
             veganScore={veganScore}
             veganWhy={veganWhy}
           />

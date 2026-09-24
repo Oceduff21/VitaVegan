@@ -58,7 +58,7 @@ export function AvatarPicker({
 
   function Grid({ items }: { items: typeof MASCOTS }) {
     return (
-      <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6 sm:gap-2 lg:grid-cols-8">
         {items.map((m) => {
           const on = !pic && id === m.id;
           return (
@@ -66,12 +66,12 @@ export function AvatarPicker({
               key={m.id}
               type="button"
               onClick={() => pick(m.id)}
-              className={`flex min-h-24 flex-col items-center gap-1 rounded-xl p-2 ${on ? "ring-2 ring-forest bg-leaf/15" : "bg-sand/40"}`}
+              className={`flex min-h-[5.5rem] flex-col items-center gap-1 rounded-xl p-1.5 sm:min-h-24 sm:p-2 ${on ? "ring-2 ring-forest bg-leaf/15" : "bg-sand/40"}`}
             >
-              <span className="h-14 w-14 overflow-hidden rounded-full sm:h-16 sm:w-16">
+              <span className="h-12 w-12 overflow-hidden rounded-full sm:h-16 sm:w-16">
                 <MascotSvg id={m.id} />
               </span>
-              <span className="text-center text-xs font-medium leading-tight">{t(m.nameKey)}</span>
+              <span className="line-clamp-2 text-center text-[0.65rem] font-medium leading-tight sm:text-xs">{t(m.nameKey)}</span>
             </button>
           );
         })}

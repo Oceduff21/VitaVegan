@@ -12,6 +12,7 @@ export type ReviewDTO = {
   author: string;
   avatarId?: string;
   photo?: string;
+  stickerId?: string;
   mine?: boolean;
 };
 
@@ -112,7 +113,7 @@ export function RecipeReviews({
         {reviews.map((r) => (
           <li key={r.id} className="recipe-review">
             <div className="flex items-center gap-2">
-              <UserAvatar avatarId={r.avatarId} photo={r.photo} size={28} />
+              <UserAvatar avatarId={r.avatarId} photo={r.photo} stickerId={r.stickerId} size={28} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">{r.author}</p>
                 <p className="recipe-star-read" aria-label={`${r.rating}/5`}>

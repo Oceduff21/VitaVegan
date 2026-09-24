@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { BarcodeScanArt } from "@/components/BarcodeScanArt";
 import { AnimalScore } from "@/components/score/AnimalScore";
 import { RecipePulseBlocks } from "@/components/recipes/RecipePulseBlocks";
+import { HomeDayHub } from "@/components/HomeDayHub";
+import { HomeAcademyInvite } from "@/components/HomeAcademyInvite";
 import { getT } from "@/lib/i18n/server";
 import { isPremium } from "@/lib/entitlements";
 
@@ -12,29 +14,35 @@ export default async function HomePage() {
   const { t } = await getT();
   const session = await auth();
   const signedIn = Boolean(session?.user);
-  const showMarketing = !isPremium(session?.user?.role, session?.user?.trialEndsAt);
+  const premium = isPremium(session?.user?.role, session?.user?.trialEndsAt);
+  const showMarketing = !premium;
 
   return (
-    <div className="flex flex-col gap-8 lg:gap-10">
-      <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-10">
-        <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6 lg:gap-10">
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-10">
+        <div className="flex flex-col gap-3 sm:gap-4">
           <div className="max-w-2xl">
-            {signedIn ? (
+            {signedIn && premium ? (
               <>
-                <h1 className="text-[1.7rem] leading-tight sm:text-[1.95rem]">{t("dashboard.title")}</h1>
+                <h1 className="text-[1.45rem] leading-tight sm:text-[1.7rem] sm:leading-tight lg:text-[1.95rem]">{t("home.hubHello")}</h1>
+                <p className="lead mt-1.5 max-w-xl">{t("home.hubLead")}</p>
+              </>
+            ) : signedIn ? (
+              <>
+                <h1 className="text-[1.45rem] leading-tight sm:text-[1.7rem] lg:text-[1.95rem]">{t("dashboard.title")}</h1>
                 <p className="lead mt-1.5 max-w-xl">{t("dashboard.lead")}</p>
               </>
             ) : (
               <>
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-leaf">{t("home.kicker")}</p>
-                <h1 className="mt-1.5 text-[1.5rem] leading-tight sm:text-[1.85rem] lg:text-[2.1rem]">{t("home.title")}</h1>
+                <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-leaf sm:text-xs">{t("home.kicker")}</p>
+                <h1 className="mt-1.5 text-[1.35rem] leading-tight sm:text-[1.7rem] lg:text-[2.1rem]">{t("home.title")}</h1>
                 <p className="lead mt-2 max-w-xl">{t("home.lead")}</p>
               </>
             )}
           </div>
 
-          <div className="flex justify-center">
-            <Link href="/scan" className="scan-barcode home-scan">
+          <div className="flex justify-center" data-onboard="scan">
+            <Link href="/scan" className="scan-barcode home-scan" id="onboard-scan-cta">
               <BarcodeScanArt />
               <span className="scan-barcode-label">{t("scan.cta")}</span>
             </Link>
@@ -59,6 +67,29 @@ export default async function HomePage() {
         ) : null}
       </section>
 
+      {premium ? (
+        <>
+          <HomeAcademyInvite
+            title={t("academy.title")}
+            lead={t("home.academyLead")}
+            cta={t("home.academyCta")}
+            chips={[
+              { href: "/academie?tab=quiz", label: t("academy.tab.quiz") },
+              { href: "/academie?tab=flash", label: t("academy.tab.flash") },
+              { href: "/academie?tab=guide", label: t("academy.tab.guide") },
+            ]}
+          />
+          <HomeDayHub />
+        </>
+      ) : (
+        <HomeAcademyInvite
+          title={t("academy.title")}
+          lead={t("home.academyTeaser")}
+          cta={signedIn ? t("account.upgrade") : t("home.signup")}
+          href={signedIn ? "/compte" : "/inscription"}
+        />
+      )}
+
       <RecipePulseBlocks />
 
       {showMarketing ? (
@@ -81,7 +112,7 @@ export default async function HomePage() {
           <section className="rounded-2xl bg-white p-5 sm:p-6">
             <h2 className="text-xl sm:text-2xl">{t("home.pricingTitle")}</h2>
             <p className="mt-2 max-w-2xl text-sm text-ink/70 sm:text-base">{t("home.pricing")}</p>
-            <Link href="/signup" className="btn btn-primary mt-5 w-full justify-center sm:w-auto">
+            <Link href="/inscription" className="btn btn-primary mt-5 w-full justify-center sm:w-auto">
               {t("home.signup")}
             </Link>
           </section>

@@ -2,16 +2,13 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isPremium } from "@/lib/entitlements";
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
+import { localDate } from "@/lib/dates";
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "auth" }, { status: 401 });
   const body = (await req.json()) as { score: number; total: number };
-  const day = today();
+  const day = localDate();
   if (!isPremium(session.user.role, session.user.trialEndsAt)) {
     const existing = await prisma.quizResult.findFirst({
       where: { userId: session.user.id, date: day },

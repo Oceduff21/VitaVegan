@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import type { QuizQuestion } from "@/data/quizzes";
+import { QUIZ_SESSION_SIZE } from "@/data/quizzes";
 import { useI18n } from "@/components/i18n/LanguageProvider";
+import { pickAvoidingRecent, QUIZ_SESSION_KEY } from "@/lib/academy-session";
 
 const BURST = [
   { dx: "-52px", dy: "-46px", color: "#e8b84a" },
@@ -24,19 +26,34 @@ export function QuizClient({
   canPlayMore: boolean;
 }) {
   const { t } = useI18n();
+  const [seed, setSeed] = useState(0);
+  const [session, setSession] = useState<QuizQuestion[] | null>(null);
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
-  const q = questions[index];
 
-  const locked = useMemo(() => !canPlayMore && index > 0 && picked === null && index !== 0, [canPlayMore, index, picked]);
+  useEffect(() => {
+    setSession(pickAvoidingRecent(questions, canPlayMore ? QUIZ_SESSION_SIZE : 1, QUIZ_SESSION_KEY));
+    setIndex(0);
+    setPicked(null);
+    setScore(0);
+    setDone(false);
+  }, [questions, canPlayMore, seed]);
 
-  if (!q) return null;
+  const q = session?.[index];
+
+  function restart() {
+    setSeed((s) => s + 1);
+  }
+
+  if (!session || !q) {
+    return <p className="text-sm text-ink/50">{t("ava.saving")}</p>;
+  }
 
   if (done) {
     return (
-      <div className="anim-card-in relative overflow-hidden rounded-3xl bg-white p-6">
+      <div className="anim-card-in relative overflow-hidden rounded-2xl bg-white p-4 sm:rounded-3xl sm:p-6">
         {BURST.map((b, i) => (
           <span
             key={i}
@@ -45,18 +62,24 @@ export function QuizClient({
           />
         ))}
         <h2 className="anim-bounce text-2xl">
-          {t("quiz.score")} : {score} / {questions.length}
+          {t("quiz.score")} : {score} / {session.length}
         </h2>
         <p className="mt-2 text-ink/70">{t("quiz.done")}</p>
+        {canPlayMore ? (
+          <button type="button" className="btn btn-primary mt-4" onClick={restart}>
+            {t("games.again")}
+          </button>
+        ) : null}
       </div>
     );
   }
 
   return (
     <div className="rounded-3xl bg-white p-6">
-      <div key={index} className="anim-slide">
+      <div key={`${seed}-${index}`} className="anim-slide">
         <p className="mb-2 text-sm text-ink/50">
-          {t("quiz.question")} {index + 1} / {canPlayMore ? questions.length : 1}
+          {t("quiz.question")} {index + 1} / {session.length}
+          <span className="text-ink/35"> · {t("quiz.pool").replace("{n}", String(questions.length))}</span>
         </p>
         <h2 className="mb-4 text-2xl">{q.prompt}</h2>
         <div className="flex flex-col gap-2">
@@ -95,18 +118,13 @@ export function QuizClient({
             className="mt-3 min-h-12 w-full rounded-full bg-forest px-4 py-3 text-cream sm:w-auto"
             onClick={async () => {
               const next = index + 1;
-              const lastAllowed = canPlayMore ? questions.length : 1;
-              if (next >= lastAllowed) {
+              if (next >= session.length) {
                 setDone(true);
                 await fetch("/api/quiz", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ score: picked === q.answerId ? score : score, total: lastAllowed }),
+                  body: JSON.stringify({ score, total: session.length }),
                 });
-                return;
-              }
-              if (!canPlayMore) {
-                setDone(true);
                 return;
               }
               setIndex(next);
@@ -117,7 +135,6 @@ export function QuizClient({
           </button>
         </div>
       ) : null}
-      {locked ? <p className="mt-3 text-sm">{t("quiz.lock")}</p> : null}
     </div>
   );
 }

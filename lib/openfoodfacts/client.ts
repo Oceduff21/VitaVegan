@@ -26,18 +26,39 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function firstNum(n: Record<string, unknown>, ...keys: string[]): number {
+  for (const k of keys) {
+    const v = num(n[k]);
+    if (v > 0) return v;
+  }
+  return 0;
+}
+
 function mapNutrients(n: Record<string, unknown>): Partial<NutrientMap> {
+  const ala = firstNum(
+    n,
+    "alpha-linolenic-acid_100g",
+    "alpha-linolenic-acid",
+    "ala_100g",
+    "omega-3-fat_100g",
+    "omega-3-fat",
+  );
+  // EPA/DHA (mg) → rough g contribution toward the omega-3 gauge (algae oils)
+  const dhaMg = firstNum(n, "dha_100g", "dha", "docosahexaenoic-acid_100g");
+  const epaMg = firstNum(n, "epa_100g", "epa", "eicosapentaenoic-acid_100g");
+  const longChainG = (dhaMg + epaMg) / 1000;
+
   return {
-    calories: num(n["energy-kcal_100g"] ?? n["energy-kcal"]),
-    protein: num(n["proteins_100g"] ?? n.proteins),
-    iron: num(n["iron_100g"] ?? n.iron),
-    calcium: num(n["calcium_100g"] ?? n.calcium),
-    b12: num(n["vitamin-b12_100g"] ?? n["vitamin_b12"]),
-    omega3: num(n["alpha-linolenic-acid_100g"] ?? n["omega-3-fat_100g"]),
-    vitaminD: num(n["vitamin-d_100g"]),
-    iodine: num(n["iodine_100g"]),
-    zinc: num(n["zinc_100g"]),
-    fiber: num(n["fiber_100g"] ?? n.fiber),
+    calories: firstNum(n, "energy-kcal_100g", "energy-kcal", "energy-kcal_serving"),
+    protein: firstNum(n, "proteins_100g", "proteins"),
+    iron: firstNum(n, "iron_100g", "iron"),
+    calcium: firstNum(n, "calcium_100g", "calcium"),
+    b12: firstNum(n, "vitamin-b12_100g", "vitamin_b12", "vitamin-b12", "vitamin-b12_serving"),
+    omega3: Math.round((ala + longChainG) * 1000) / 1000,
+    vitaminD: firstNum(n, "vitamin-d_100g", "vitamin_d", "vitamin-d", "vitamin-d_serving"),
+    iodine: firstNum(n, "iodine_100g", "iodine", "iodine_serving"),
+    zinc: firstNum(n, "zinc_100g", "zinc"),
+    fiber: firstNum(n, "fiber_100g", "fiber", "fibre_100g"),
   };
 }
 

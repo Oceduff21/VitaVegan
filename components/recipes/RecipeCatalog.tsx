@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, useEffect, type ReactNode } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { RecipeCard } from "@/components/recipes/RecipeCard";
 import { SearchRow } from "@/components/ui/SearchRow";
 import { foldText } from "@/lib/recipe-filters";
@@ -15,6 +16,7 @@ export type RecipeListItem = {
   kicker: string;
   score: number;
   badge?: string;
+  userCreated?: boolean;
 };
 
 export function RecipeCatalog({
@@ -30,10 +32,29 @@ export function RecipeCatalog({
   children?: ReactNode;
   initialQuery?: string;
 }) {
-  const [q, setQ] = useState(initialQuery);
+  const router = useRouter();
+  const pathname = usePathname();
+  const sp = useSearchParams();
+  const [q, setQ] = useState(initialQuery || sp.get("q") || "");
+
+  useEffect(() => {
+    const spStr = sp.toString();
+    const t = window.setTimeout(() => {
+      const params = new URLSearchParams(spStr);
+      const trimmed = q.trim();
+      if (trimmed) params.set("q", trimmed);
+      else params.delete("q");
+      const next = params.toString();
+      if (next !== spStr) router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+    }, 280);
+    return () => window.clearTimeout(t);
+  }, [q, pathname, router, sp]);
+
   const shown = useMemo(() => {
     const needle = foldText(q.trim());
     if (!needle) return items;
+    const phraseHits = items.filter((r) => r.haystack.includes(needle));
+    if (phraseHits.length > 0) return phraseHits;
     const words = needle.split(/\s+/).filter(Boolean);
     return items.filter((r) => words.every((word) => r.haystack.includes(word)));
   }, [items, q]);
@@ -51,9 +72,9 @@ export function RecipeCatalog({
           enterKeyHint="search"
         />
       </SearchRow>
-      {initialQuery ? (
+      {q.trim() ? (
         <p className="text-sm text-ink/60">
-          {shown.length} · « {initialQuery} »
+          {shown.length} · « {q.trim()} »
         </p>
       ) : null}
       {children}
@@ -69,6 +90,7 @@ export function RecipeCatalog({
             summary={r.summary}
             score={r.score}
             badge={r.badge}
+            userCreated={r.userCreated}
           />
         ))}
       </div>

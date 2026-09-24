@@ -1,3 +1,6 @@
+export type SexPref = "" | "female" | "male" | "other";
+export type ActivityPref = "low" | "moderate" | "high";
+
 export type UserPrefs = {
   glutenFree: boolean;
   nutFree: boolean;
@@ -9,6 +12,11 @@ export type UserPrefs = {
   extraAllergies: string;
   avatarId: string;
   photo: string;
+  themeId: string;
+  stickerId: string;
+  sex: SexPref;
+  activity: ActivityPref;
+  pregnant: boolean;
 };
 
 export const EMPTY_PREFS: UserPrefs = {
@@ -22,6 +30,11 @@ export const EMPTY_PREFS: UserPrefs = {
   extraAllergies: "",
   avatarId: "pip",
   photo: "",
+  themeId: "default",
+  stickerId: "none",
+  sex: "",
+  activity: "moderate",
+  pregnant: false,
 };
 
 const RULES: { key: keyof UserPrefs; terms: string[] }[] = [
@@ -44,6 +57,11 @@ export function parsePrefs(raw?: string | null): UserPrefs {
       extraAllergies: String(parsed.extraAllergies ?? ""),
       avatarId: String(parsed.avatarId || "pip"),
       photo: String(parsed.photo ?? ""),
+      themeId: String(parsed.themeId || "default"),
+      stickerId: String(parsed.stickerId || "none"),
+      sex: parsed.sex === "female" || parsed.sex === "male" || parsed.sex === "other" ? parsed.sex : "",
+      activity: parsed.activity === "low" || parsed.activity === "high" ? parsed.activity : "moderate",
+      pregnant: Boolean(parsed.pregnant),
     };
   } catch {
     return { ...EMPTY_PREFS };

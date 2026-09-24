@@ -7,6 +7,7 @@ import { isLocale, type Locale } from "@/lib/i18n/dictionaries";
 import { prisma } from "@/lib/prisma";
 import { remainingScans } from "@/lib/billing";
 import { rememberScan } from "@/lib/scans";
+import { localDate } from "@/lib/dates";
 import { allergenHitsFromPrefsJson } from "@/lib/allergens";
 import { planetFromOff } from "@/lib/planet";
 import { localizeScore } from "@/lib/i18n/engine";
@@ -20,13 +21,14 @@ import {
   type ArticleKind,
 } from "@/lib/article-kind";
 import { crueltyFromTags } from "@/lib/cruelty";
+import { contributeScannedProduct, isUserScannedSource } from "@/lib/catalog";
 
 async function consumeScan(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return { ok: false as const, remaining: 0, prefs: "{}" };
   const rem = remainingScans(user.role, user.scansToday, user.scansDate, user.trialEndsAt);
   if (rem !== Infinity && rem <= 0) return { ok: false as const, remaining: 0, prefs: user.prefs };
-  const day = new Date().toISOString().slice(0, 10);
+  const day = localDate();
   if (rem !== Infinity) {
     await prisma.user.update({
       where: { id: userId },
@@ -109,8 +111,30 @@ async function resolveBarcode(barcode: string, lang: Locale, userId: string, pre
   });
   if (local) {
     const kind = normalizeArticleKind(local.kind === "food" ? "food" : local.kind);
-    if (isEdible(kind)) return foodFromCatalog(local, lang, userId, prefs);
-    return goodsFromCatalog(local, kind, lang, userId);
+    const contributed = await contributeScannedProduct({
+      userId,
+      kind: local.kind,
+      barcode: digits,
+      name: local.name,
+      brand: local.brand,
+      image: local.image,
+      ingredientsText: local.ingredientsText,
+      veganScore: local.veganScore,
+      veganWhy: local.veganWhy,
+      cruelty: local.cruelty,
+      source: isUserScannedSource(local.source) ? "user-scan" : "user-scan",
+    });
+    const community = {
+      userScanned: true,
+      scanCount: contributed?.scanCount ?? local.scanCount ?? 1,
+      source: contributed?.source ?? local.source ?? "user-scan",
+    };
+    if (isEdible(kind)) {
+      const payload = await foodFromCatalog(local, lang, userId, prefs);
+      return { ...payload, community };
+    }
+    const payload = await goodsFromCatalog(local, kind, lang, userId);
+    return { ...payload, community };
   }
 
   const food = await fetchOpenFoodFacts(digits, lang);
@@ -136,7 +160,31 @@ async function resolveBarcode(barcode: string, lang: Locale, userId: string, pre
         veganWhy: score.why,
         planet,
       });
-      return { kind: "product" as const, product: food, analysis, score, planet, allergens };
+      const contributed = await contributeScannedProduct({
+        userId,
+        kind: "food",
+        barcode: food.barcode,
+        name: food.name,
+        brand: food.brands,
+        image: food.image,
+        ingredientsText: food.ingredientsText,
+        veganScore: score.score,
+        veganWhy: score.why,
+        source: "user-scan",
+      });
+      return {
+        kind: "product" as const,
+        product: food,
+        analysis,
+        score,
+        planet,
+        allergens,
+        community: {
+          userScanned: true,
+          scanCount: contributed?.scanCount ?? 1,
+          source: "user-scan",
+        },
+      };
     }
     return goodsFromOffLike(food, guessed, lang, userId);
   }
@@ -158,7 +206,30 @@ async function resolveBarcode(barcode: string, lang: Locale, userId: string, pre
       veganWhy: score.why,
       cruelty: cosmetic.cruelty,
     });
-    return { kind: "cosmetic" as const, product: cosmetic, analysis, score };
+    const contributed = await contributeScannedProduct({
+      userId,
+      kind: "cosmetic",
+      barcode: cosmetic.barcode,
+      name: cosmetic.name,
+      brand: cosmetic.brands,
+      image: cosmetic.image,
+      ingredientsText: "",
+      veganScore: score.score,
+      veganWhy: score.why,
+      cruelty: cosmetic.cruelty,
+      source: "user-scan",
+    });
+    return {
+      kind: "cosmetic" as const,
+      product: cosmetic,
+      analysis,
+      score,
+      community: {
+        userScanned: true,
+        scanCount: contributed?.scanCount ?? 1,
+        source: "user-scan",
+      },
+    };
   }
   if (goods) return goodsResponse(goods, lang, userId);
   return null;
@@ -292,5 +363,28 @@ async function goodsResponse(product: GoodsProduct, lang: Locale, userId: string
     veganWhy: score.why,
     cruelty: product.cruelty,
   });
-  return { kind: product.articleKind, product, analysis, score };
+  const contributed = await contributeScannedProduct({
+    userId,
+    kind: product.articleKind,
+    barcode: product.barcode,
+    name: product.name,
+    brand: product.brands,
+    image: product.image,
+    ingredientsText: product.ingredientsText,
+    veganScore: score.score,
+    veganWhy: score.why,
+    cruelty: product.cruelty,
+    source: "user-scan",
+  });
+  return {
+    kind: product.articleKind,
+    product,
+    analysis,
+    score,
+    community: {
+      userScanned: true,
+      scanCount: contributed?.scanCount ?? 1,
+      source: "user-scan",
+    },
+  };
 }

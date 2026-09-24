@@ -84,6 +84,17 @@ export function IconAlert({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+/** Academy — quiz & games */
+export function IconAcademy({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M3 9.5 12 5l9 4.5-9 4.5L3 9.5z" strokeLinejoin="round" />
+      <path d="M7 12.2v4.3c0 .8 2.2 2.5 5 2.5s5-1.7 5-2.5v-4.3" strokeLinecap="round" />
+      <path d="M21 9.5v6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /** Help / unknown */
 export function IconHelp({ className = "h-4 w-4" }: { className?: string }) {
   return (

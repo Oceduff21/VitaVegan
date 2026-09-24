@@ -8,6 +8,8 @@ import { recipeCover } from "@/data/recipe-covers";
 import { OFFICIAL_RECIPES } from "@/data/official-recipes";
 import { suggestWeekMeals } from "@/lib/week-plan";
 import { buildGauges, sumLogs } from "@/lib/nutrition/gauges";
+import { resolveDailyNeeds } from "@/lib/nutrition/needs";
+import { localDate } from "@/lib/dates";
 import { isPremium } from "@/lib/entitlements";
 import { RecipeCard } from "@/components/recipes/RecipeCard";
 import { ChallengeCards } from "@/components/recipes/ChallengeCards";
@@ -74,6 +76,7 @@ export async function RecipePulseBlocks() {
 
   let pulseRecipes = officialPulse();
   let prefs = parsePrefs(null);
+  let birthDate: Date | string | null = null;
   let logs: { date: string; kind: string; barcode: string | null; nutrients: string }[] = [];
   let scanScores: number[] = [];
 
@@ -85,6 +88,7 @@ export async function RecipePulseBlocks() {
   if (session?.user?.id && isPremium(session.user.role, session.user.trialEndsAt)) {
     const user = await prisma.user.findUnique({ where: { id: session.user.id } });
     prefs = parsePrefs(user?.prefs);
+    birthDate = user?.birthDate ?? null;
     const published = await prisma.recipe.findMany({
       where: { status: "published" },
       orderBy: { createdAt: "desc" },
@@ -111,7 +115,10 @@ export async function RecipePulseBlocks() {
     logs,
     scanScores,
   });
-  const gauges = buildGauges(sumLogs(logs.map((l) => l.nutrients)));
+  const today = localDate();
+  const todayNutrients = logs.filter((l) => l.date === today).map((l) => l.nutrients);
+  const targets = resolveDailyNeeds({ prefs, birthDate });
+  const gauges = buildGauges(sumLogs(todayNutrients), targets);
   const { meals } = suggestWeekMeals(gauges, OFFICIAL_RECIPES, prefs);
   const seasonRecipes = seasonalPicks(pulseRecipes);
   const communityPick = communityRow
@@ -139,6 +146,7 @@ export async function RecipePulseBlocks() {
       summary: loc?.summary ?? r.summary,
       score: r.veganScore,
       badge,
+      userCreated: r.source === "community",
     };
   }
 
@@ -200,7 +208,7 @@ export async function RecipePulseBlocks() {
           <h2 className="text-xl sm:text-2xl">{t("recipes.communityPick")}</h2>
           <p className="mt-1 text-sm text-ink/65">{t("recipes.communityPickLead")}</p>
           <div className="mt-4 max-w-lg">
-            <RecipeCard {...card(communityPick, t("recipes.communityBadge"))} />
+            <RecipeCard {...card(communityPick, t("recipes.userCreated"))} />
           </div>
         </section>
       ) : null}

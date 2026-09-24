@@ -18,6 +18,41 @@
   --bottom-nav: 4.5rem;
 }
 
+html[data-theme="moss"] {
+  --cream: #eef6ea;
+  --forest: #1a6b3c;
+  --leaf: #3db86a;
+  --ink: #1a2e22;
+  --terracotta: #8a6a28;
+  --sand: #d8e8d0;
+  --bloom: #1a6b3c;
+  --petal: #5a9a68;
+}
+
+html[data-theme="orchard"] {
+  --cream: #fff4e6;
+  --forest: #2d6b28;
+  --leaf: #8bc34a;
+  --ink: #2a1c10;
+  --terracotta: #c47820;
+  --sand: #f0d4a8;
+  --bloom: #c47820;
+  --mango: #e07820;
+  --petal: #d4a040;
+}
+
+html[data-theme="dusk"] {
+  --cream: #e8f2ee;
+  --forest: #0e5c4a;
+  --leaf: #2a9a78;
+  --ink: #122820;
+  --terracotta: #a06838;
+  --sand: #c8ddd4;
+  --bloom: #0e5c4a;
+  --sky: #3a9aaa;
+  --petal: #4a8a70;
+}
+
 @theme inline {
   --color-cream: var(--cream);
   --color-forest: var(--forest);
@@ -57,6 +92,36 @@ body {
 body {
   font-family: var(--font-dm), ui-sans-serif, system-ui, sans-serif;
   min-height: 100dvh;
+}
+
+.lead {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: rgb(42 20 48 / 0.72);
+}
+
+@media (min-width: 640px) {
+  .lead {
+    font-size: 1.05rem;
+    line-height: 1.5;
+  }
+}
+
+/* Mobile-first: contain flex/grid children */
+main {
+  min-width: 0;
+}
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 480px) {
+  .compare-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 h1,
@@ -593,15 +658,23 @@ textarea.field {
   align-items: flex-start;
   justify-content: center;
   gap: 0.05rem;
-  min-height: 2.75rem;
-  padding: 0.4rem 0.95rem;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 999px;
   border: 1px solid rgb(42 20 48 / 0.1);
   background: #fff;
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   text-align: left;
   letter-spacing: 0;
+}
+
+@media (min-width: 640px) {
+  .scan-mode {
+    min-height: 2.75rem;
+    padding: 0.4rem 0.95rem;
+    font-size: 0.875rem;
+  }
 }
 
 .scan-mode span {
@@ -705,7 +778,16 @@ a.scan-barcode {
 }
 
 .scan-barcode.home-scan {
-  width: min(100%, 14.5rem);
+  width: min(100%, 17.5rem);
+}
+
+.scan-barcode.home-scan svg {
+  height: 6.25rem;
+}
+
+.scan-barcode.home-scan .scan-barcode-label {
+  font-size: 0.75rem;
+  padding-block: 0.2rem 0.12rem;
 }
 
 .scan-barcode.scan-page-cta {
@@ -715,12 +797,6 @@ a.scan-barcode {
 
 .scan-barcode.scan-page-cta svg {
   height: 6rem;
-}
-
-.compare-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
 }
 
 .compare-slot {
@@ -840,6 +916,45 @@ a.scan-barcode {
   object-fit: cover;
   border-radius: 1.25rem;
   background: #111;
+}
+
+.scan-result-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-radius: 1.5rem 1.5rem 0 0;
+  background: color-mix(in srgb, white 92%, var(--cream));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 1px 0 rgb(42 20 48 / 0.06);
+}
+
+.scan-result-details summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.85rem;
+  background: var(--sand);
+  color: var(--forest);
+}
+
+.scan-result-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.scan-result-details summary::after {
+  content: "+";
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.scan-result-details[open] summary::after {
+  content: "−";
 }
 
 .scan-result-actions {

@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { ageFromBirthDate, isStrongPassword, MIN_AGE } from "@/lib/password";
 import { EMPTY_PREFS } from "@/lib/profile";
+import { allocateHandle } from "@/lib/allocate-handle";
 
 export async function POST(req: Request) {
   const { firstName, lastName, birthDate, email, password } = (await req.json()) as {
@@ -24,12 +25,14 @@ export async function POST(req: Request) {
   const exists = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
   if (exists) return NextResponse.json({ error: "taken" }, { status: 409 });
   const adminEmail = (process.env.ADMIN_EMAIL ?? "admin@vitavegan.app").toLowerCase();
+  const handle = await allocateHandle(fn);
   const user = await prisma.user.create({
     data: {
       firstName: fn,
       lastName: ln,
       name: `${fn} ${ln}`,
       birthDate,
+      handle,
       prefs: JSON.stringify(EMPTY_PREFS),
       email: email.toLowerCase().trim(),
       passwordHash: await bcrypt.hash(password, 10),
@@ -37,5 +40,5 @@ export async function POST(req: Request) {
       trialEndsAt: email.toLowerCase() === adminEmail ? null : trialEndFromNow(),
     },
   });
-  return NextResponse.json({ ok: true, id: user.id });
+  return NextResponse.json({ ok: true, id: user.id, handle: user.handle });
 }

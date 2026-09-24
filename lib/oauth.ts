@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { trialEndFromNow } from "@/lib/entitlements";
+import { allocateHandle } from "@/lib/allocate-handle";
 
 export async function upsertOAuthUser(input: { email: string; name?: string | null }) {
   const email = input.email.toLowerCase().trim();
@@ -9,21 +10,25 @@ export async function upsertOAuthUser(input: { email: string; name?: string | nu
   const lastName = parts.slice(1).join(" ");
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
+    const handle = existing.handle || (await allocateHandle(existing.firstName || firstName));
     return prisma.user.update({
       where: { id: existing.id },
       data: {
         name: existing.name || display,
         firstName: existing.firstName || firstName,
         lastName: existing.lastName || lastName,
+        handle,
       },
     });
   }
+  const handle = await allocateHandle(firstName);
   return prisma.user.create({
     data: {
       email,
       name: display,
       firstName,
       lastName,
+      handle,
       passwordHash: "",
       trialEndsAt: trialEndFromNow(),
     },

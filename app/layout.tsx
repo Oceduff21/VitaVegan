@@ -44,7 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen antialiased">
         <Providers locale={locale}>
           <Nav />
-          <main className="mx-auto max-w-5xl px-4 py-5 pb-[calc(6.25rem+env(safe-area-inset-bottom))] md:px-6 md:py-8 md:pb-8">
+          <main className="mx-auto w-full max-w-5xl px-3 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-5 md:px-6 md:py-8 md:pb-8">
             {children}
           </main>
         </Providers>

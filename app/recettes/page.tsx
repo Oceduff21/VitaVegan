@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireFullApp } from "@/lib/access";
 import { getT } from "@/lib/i18n/server";
@@ -9,6 +10,7 @@ import { recipeHasAlcohol } from "@/data/official-recipes";
 import { RecipeFilters } from "@/components/recipes/RecipeFilters";
 import { RecipeCatalog, type RecipeListItem } from "@/components/recipes/RecipeCatalog";
 import { foldText, recipeKindIds, recipesHref, type RecipeFilterSp } from "@/lib/recipe-filters";
+import { nutrientSearchBlob } from "@/lib/nutrition/search";
 
 const CAT_KEYS = ["petit-dej", "plat", "dessert", "snack", "apero", "boisson", "batch", "bases"] as const;
 
@@ -60,18 +62,21 @@ export default async function RecettesPage({
       slug: r.slug,
       title,
       summary,
-      haystack: foldText(`${title} ${summary} ${r.title} ${r.summary} ${r.ingredients} ${r.slug}`),
+      haystack: foldText(
+        `${title} ${summary} ${r.title} ${r.summary} ${r.ingredients} ${r.slug} ${nutrientSearchBlob(r.nutrients)}`,
+      ),
       cover: recipeCover(r.slug, r.image) ?? "",
       kicker: `${t(`recipes.cat.${r.category}`) || r.category} · ${r.timeMinutes} ${t("recipes.min")}`,
       score: r.veganScore,
       badge:
         r.source === "community"
-          ? t("recipes.communityBadge")
+          ? t("recipes.userCreated")
           : r.category === "apero"
             ? recipeHasAlcohol(r.slug)
               ? t("recipes.alcYes")
               : t("recipes.alcNo")
             : undefined,
+      userCreated: r.source === "community",
     };
   });
 
@@ -86,48 +91,50 @@ export default async function RecettesPage({
           <Link href="/courses" className="btn btn-secondary">
             {t("shop.title")}
           </Link>
-          <Link href="/recettes?fav=1" className="btn btn-secondary">
-            {t("nav.favorites")}
+          <Link href="/favoris" className="btn btn-secondary">
+            {t("fav.hubTitle")}
           </Link>
           <Link href="/recettes/nouvelle" className="btn btn-primary">
             {t("recipes.publish")}
           </Link>
         </div>
       </div>
-      <RecipeCatalog
-        items={catalog}
-        placeholder={t("recipes.search")}
-        empty={favOnly ? t("fav.empty") : t("dashboard.empty")}
-        initialQuery={typeof sp.q === "string" ? sp.q : ""}
-      >
-        <div className="tabs" aria-label={t("recipes.title")}>
-          <Link href="/recettes" aria-current={!sp.cat && !favOnly ? "page" : undefined} className={`tab ${!sp.cat && !favOnly ? "is-on" : ""}`}>
-            {t("recipes.all")}
+      <Suspense fallback={<p className="text-sm text-ink/55">…</p>}>
+        <RecipeCatalog
+          items={catalog}
+          placeholder={t("recipes.search")}
+          empty={favOnly ? t("fav.empty") : t("dashboard.empty")}
+          initialQuery={typeof sp.q === "string" ? sp.q : ""}
+        >
+          <div className="tabs" aria-label={t("recipes.title")}>
+            <Link href="/recettes" aria-current={!sp.cat && !favOnly ? "page" : undefined} className={`tab ${!sp.cat && !favOnly ? "is-on" : ""}`}>
+              {t("recipes.all")}
+            </Link>
+            {CAT_KEYS.map((id) => (
+              <Link
+                key={id}
+                href={`/recettes?cat=${id}`}
+                aria-current={sp.cat === id ? "page" : undefined}
+                className={`tab ${sp.cat === id ? "is-on" : ""}`}
+              >
+                {t(`recipes.cat.${id}`)}
+              </Link>
+            ))}
+          </div>
+          {favOnly ? null : <RecipeFilters sp={sp} t={t} />}
+          {hasAnyPref(prefs) ? null : (
+            <p className="text-sm text-ink/60">
+              <Link href="/compte" className="underline">
+                {t("pref.title")}
+              </Link>
+            </p>
+          )}
+          <Link href={mineHref} className={`chip self-start ${mine ? "border-leaf bg-leaf/15 text-forest" : ""}`}>
+            <span aria-hidden>{mine ? "☑" : "☐"}</span>
+            {t("recipes.mine")}
           </Link>
-          {CAT_KEYS.map((id) => (
-            <Link
-              key={id}
-              href={`/recettes?cat=${id}`}
-              aria-current={sp.cat === id ? "page" : undefined}
-              className={`tab ${sp.cat === id ? "is-on" : ""}`}
-            >
-              {t(`recipes.cat.${id}`)}
-            </Link>
-          ))}
-        </div>
-        {favOnly ? null : <RecipeFilters sp={sp} t={t} />}
-        {hasAnyPref(prefs) ? null : (
-          <p className="text-sm text-ink/60">
-            <Link href="/compte" className="underline">
-              {t("pref.title")}
-            </Link>
-          </p>
-        )}
-        <Link href={mineHref} className={`chip self-start ${mine ? "border-leaf bg-leaf/15 text-forest" : ""}`}>
-          <span aria-hidden>{mine ? "☑" : "☐"}</span>
-          {t("recipes.mine")}
-        </Link>
-      </RecipeCatalog>
+        </RecipeCatalog>
+      </Suspense>
     </div>
   );
 }

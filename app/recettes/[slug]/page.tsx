@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AnimalScore } from "@/components/score/AnimalScore";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { UserRecipeBadge } from "@/components/UserScannedBadge";
 import { RecipeCookPanel } from "@/components/recipes/RecipeCookPanel";
 import { RecipeReviews } from "@/components/recipes/RecipeReviews";
 import { getT } from "@/lib/i18n/server";
@@ -11,12 +12,18 @@ import { recipeCover } from "@/data/recipe-covers";
 import { recipeHasAlcohol } from "@/data/official-recipes";
 import { parseGear, parseTasting, recipeServe } from "@/data/recipe-serve";
 import { parsePrefs } from "@/lib/profile";
+import { publicAuthor } from "@/lib/public-author";
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const session = await requireFullApp();
   const { t, locale } = await getT();
-  const recipe = await prisma.recipe.findUnique({ where: { slug } });
+  const recipe = await prisma.recipe.findUnique({
+    where: { slug },
+    include: {
+      author: { select: { handle: true } },
+    },
+  });
   if (!recipe) notFound();
   if (recipe.status !== "published" && recipe.authorId !== session.user.id) notFound();
 
@@ -42,7 +49,7 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ s
   const reviewRows = await prisma.recipeReview.findMany({
     where: { recipeId: recipe.id },
     orderBy: { createdAt: "desc" },
-    include: { user: { select: { firstName: true, name: true, prefs: true } } },
+    include: { user: { select: { handle: true, prefs: true } } },
   });
   const reviews = reviewRows.map((r) => {
     const prefs = parsePrefs(r.user.prefs);
@@ -51,12 +58,14 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ s
       rating: r.rating,
       comment: r.comment,
       createdAt: r.createdAt.toISOString(),
-      author: r.user.firstName || r.user.name || "Vita",
+      author: publicAuthor(r.user),
       avatarId: prefs.avatarId,
       photo: prefs.photo,
+      stickerId: prefs.stickerId,
       mine: r.userId === session.user.id,
     };
   });
+  const authorLabel = recipe.author?.handle ? publicAuthor(recipe.author) : null;
 
   return (
     <article className="flex flex-col gap-6">
@@ -73,6 +82,16 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ s
             : ""}
         </p>
         <h1 className="mt-1 text-2xl leading-tight sm:text-4xl">{title}</h1>
+        {recipe.source === "community" ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <UserRecipeBadge />
+            <p className="text-sm text-ink/60">
+              {authorLabel
+                ? t("recipes.byAuthor").replace("{name}", authorLabel)
+                : t("recipes.userCreatedLead")}
+            </p>
+          </div>
+        ) : null}
         <p className="mt-2 text-ink/70">{summary}</p>
       </div>
       {session?.user ? <FavoriteButton recipeId={recipe.id} initial={Boolean(fav)} /> : null}

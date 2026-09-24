@@ -2,6 +2,8 @@ export type RecipeTasting = {
   tip: string;
   sides: string[];
   drinks: string[];
+  /** Cooking pairing ideas — not medical advice. */
+  kitchenTips?: string[];
 };
 
 export type RecipeServe = {
@@ -20,6 +22,10 @@ const BY_CAT: Record<string, RecipeServe> = {
       tip: "Servir tiède, pas brûlant — les fruits gardent plus de goût.",
       sides: ["fruit de saison", "oléagineux"],
       drinks: ["café", "thé", "latte d'avoine"],
+      kitchenTips: [
+        "Un filet de citron ou des fruits acidulés à côté des flocons / légumineuses : mariage classique en cuisine.",
+        "Les graines (lin, chia) se dégustent mieux mixées ou trempées — texture et goût.",
+      ],
     },
   },
   plat: {
@@ -28,6 +34,10 @@ const BY_CAT: Record<string, RecipeServe> = {
       tip: "Goûte le sel en fin de cuisson. Un filet de citron réveille souvent le plat.",
       sides: ["salade verte", "pain"],
       drinks: ["eau", VIN_ROUGE],
+      kitchenTips: [
+        "Citron, tomate ou poivron avec un plat de lentilles / pois chiches : combo fréquente en cuisine.",
+        "Faire tremper les légumineuses la veille change texture et cuisson.",
+      ],
     },
   },
   dessert: {
@@ -36,6 +46,7 @@ const BY_CAT: Record<string, RecipeServe> = {
       tip: "Laisse reposer 5 min hors du four : la texture se pose.",
       sides: ["fruit frais"],
       drinks: ["café", "thé", "infusion"],
+      kitchenTips: ["Un fruit frais en accompagnement équilibre le sucre perçu du dessert."],
     },
   },
   snack: {
@@ -44,6 +55,7 @@ const BY_CAT: Record<string, RecipeServe> = {
       tip: "À température ambiante, les parfums sortent mieux que tout droit du frigo.",
       sides: ["crudités"],
       drinks: ["eau", "thé glacé"],
+      kitchenTips: ["Houmous + crudités croquantes : contraste de textures."],
     },
   },
   batch: {
@@ -52,6 +64,10 @@ const BY_CAT: Record<string, RecipeServe> = {
       tip: "Le lendemain, les épices se sont mariées. Réchauffe à feu doux avec un fond d'eau. Congèle en portions plates.",
       sides: ["riz", "pâtes", "pain"],
       drinks: ["eau"],
+      kitchenTips: [
+        "Congèle en portions individuelles : tu pourras « ajouter une portion » aux jauges plus tard.",
+        "Un trait de citron au moment de servir réveille un plat réchauffé.",
+      ],
     },
   },
   bases: {
@@ -60,6 +76,7 @@ const BY_CAT: Record<string, RecipeServe> = {
       tip: "Étiquette la date. Secoue les laits avant usage. Les bases changent le goût de toutes tes recettes.",
       sides: ["pain", "céréales", "légumes crus"],
       drinks: ["eau"],
+      kitchenTips: ["Secoue bien les laits végétaux maison : la matière se dépose."],
     },
   },
   boisson: {
@@ -68,6 +85,7 @@ const BY_CAT: Record<string, RecipeServe> = {
       tip: "Sers chaud à 60–65 °C pour les lattes, très froid pour le kombucha. Lait végétal bien mousseux.",
       sides: ["biscuit vegan", "fruit"],
       drinks: [],
+      kitchenTips: ["Pour un latte, chauffe le lait sans le faire bouillir — la mousse tient mieux."],
     },
   },
   apero: {
@@ -76,6 +94,7 @@ const BY_CAT: Record<string, RecipeServe> = {
       tip: "Sers frais. Un apéro vegan se tient aussi bien sans alcool qu'avec.",
       sides: ["crudités", "olives", "toasts"],
       drinks: ["eau pétillante", "mocktail"],
+      kitchenTips: ["Assiette partagée : chacun prend ce qu’il veut — logue seulement ta portion."],
     },
   },
 };
@@ -107,6 +126,11 @@ const BY_SLUG: Record<string, Partial<RecipeServe> & { tasting?: Partial<RecipeT
       tip: "Base du bowl bien épaisse, granola ajouté au dernier moment pour qu'il reste croustillant.",
       sides: ["café"],
       drinks: ["café", "thé"],
+      kitchenTips: [
+        "Fruits acidulés (framboises, citron) avec le bowl : mariage de goûts classique.",
+        "Ajoute le granola au dernier moment pour garder le croquant.",
+        "Une portion = un bol — clique « Ajouter une portion » autant de fois que tu en manges.",
+      ],
     },
   },
   "dal-lentilles-corail": {
@@ -115,6 +139,10 @@ const BY_SLUG: Record<string, Partial<RecipeServe> & { tasting?: Partial<RecipeT
       tip: "Un filet de citron et de coriandre crue à table.",
       sides: ["riz basmati", "naan vegan"],
       drinks: ["lassi de coco", VIN_BLANC],
+      kitchenTips: [
+        "Citron et coriandre crue à table : ça relève le dal.",
+        "Tremper les lentilles n’est pas obligatoire pour les corail, mais rincer jusqu’à eau claire change le résultat.",
+      ],
     },
   },
   "chili-sin-carne": {
@@ -476,6 +504,7 @@ function mergeTasting(base: RecipeTasting, over?: Partial<RecipeTasting>): Recip
     tip: over?.tip ?? base.tip,
     sides: over?.sides ?? base.sides,
     drinks: over?.drinks ?? base.drinks,
+    kitchenTips: over?.kitchenTips ?? base.kitchenTips,
   };
 }
 
@@ -502,11 +531,12 @@ export function parseGear(raw: string | null | undefined, fallback: string[]): s
 export function parseTasting(raw: string | null | undefined, fallback: RecipeTasting): RecipeTasting {
   try {
     const v = JSON.parse(raw || "{}") as Partial<RecipeTasting>;
-    if (v && (v.tip || Array.isArray(v.sides) || Array.isArray(v.drinks))) {
+    if (v && (v.tip || Array.isArray(v.sides) || Array.isArray(v.drinks) || Array.isArray(v.kitchenTips))) {
       return {
         tip: v.tip || fallback.tip,
         sides: Array.isArray(v.sides) ? v.sides : fallback.sides,
         drinks: Array.isArray(v.drinks) ? v.drinks : fallback.drinks,
+        kitchenTips: Array.isArray(v.kitchenTips) ? v.kitchenTips : fallback.kitchenTips,
       };
     }
   } catch {

@@ -19,7 +19,7 @@ export function buildReminders(input: {
     if (hours > 0 && hours <= 48) out.push({ id: "trial", tone: "warn", textKey: "remind.trial", href: "/compte" });
   }
   const b12 = input.gauges.find((g) => g.key === "b12");
-  if (b12 && b12.ratio < 0.4) out.push({ id: "b12", tone: "info", textKey: "remind.b12", href: "/dashboard#plan" });
+  if (b12 && b12.displayRatio < 0.4) out.push({ id: "b12", tone: "info", textKey: "remind.b12", href: "/dashboard#plan" });
   if (!input.loggedToday && premium) out.push({ id: "log", tone: "info", textKey: "remind.log", href: "/scan" });
   return out;
 }

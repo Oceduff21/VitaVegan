@@ -12,13 +12,21 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: "admin@vitavegan.app" },
-    update: { role: "admin", passwordHash: adminHash, name: "Admin Vita", firstName: "Admin", lastName: "Vita" },
+    update: {
+      role: "admin",
+      passwordHash: adminHash,
+      name: "Admin Vita",
+      firstName: "Admin",
+      lastName: "Vita",
+      handle: "admin",
+    },
     create: {
       email: "admin@vitavegan.app",
       name: "Admin Vita",
       firstName: "Admin",
       lastName: "Vita",
       birthDate: "1990-01-01",
+      handle: "admin",
       passwordHash: adminHash,
       role: "admin",
     },
@@ -33,6 +41,7 @@ async function main() {
       firstName: "Démo",
       lastName: "Vita",
       birthDate: "1995-06-15",
+      handle: "demo",
       trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     },
     create: {
@@ -41,6 +50,7 @@ async function main() {
       firstName: "Démo",
       lastName: "Vita",
       birthDate: "1995-06-15",
+      handle: "demo",
       passwordHash: demoHash,
       role: "member",
       trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),

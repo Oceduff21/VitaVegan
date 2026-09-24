@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isPremium } from "@/lib/entitlements";
 import { parsePrefs } from "@/lib/profile";
+import { publicAuthor } from "@/lib/public-author";
 
 function mapReviews(
   rows: {
@@ -11,7 +12,7 @@ function mapReviews(
     comment: string;
     createdAt: Date;
     userId: string;
-    user: { firstName: string; name: string; prefs: string };
+    user: { handle: string | null; prefs: string };
   }[],
   me?: string,
 ) {
@@ -22,9 +23,10 @@ function mapReviews(
       rating: r.rating,
       comment: r.comment,
       createdAt: r.createdAt.toISOString(),
-      author: r.user.firstName || r.user.name || "Vita",
+      author: publicAuthor(r.user),
       avatarId: prefs.avatarId,
       photo: prefs.photo,
+      stickerId: prefs.stickerId,
       mine: me ? r.userId === me : false,
     };
   });
@@ -34,7 +36,7 @@ async function loadReviews(recipeId: string, me?: string) {
   const rows = await prisma.recipeReview.findMany({
     where: { recipeId },
     orderBy: { createdAt: "desc" },
-    include: { user: { select: { firstName: true, name: true, prefs: true } } },
+    include: { user: { select: { handle: true, prefs: true } } },
   });
   return mapReviews(rows, me);
 }
