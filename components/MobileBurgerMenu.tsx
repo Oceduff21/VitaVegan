@@ -159,10 +159,10 @@ export function MobileBurgerMenu({
       : null;
 
   return (
-    <div className="md:hidden">
+    <>
       <button
         type="button"
-        className="tap relative z-[101] grid h-10 w-10 place-items-center rounded-full text-ink hover:bg-ink/5"
+        className="tap relative z-[101] grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink hover:bg-ink/5 md:hidden"
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={open ? t("nav.menuClose") : t("nav.menuOpen")}
@@ -179,6 +179,6 @@ export function MobileBurgerMenu({
         )}
       </button>
       {drawer}
-    </div>
+    </>
   );
 }
