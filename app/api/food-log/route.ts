@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { remainingScans } from "@/lib/billing";
 import { isPremium } from "@/lib/entitlements";
+import { FREE_SCANS_PER_DAY, remainingScans } from "@/lib/billing";
 import { localDate } from "@/lib/dates";
 import {
   awardRecipeLeafPoints,
@@ -13,7 +13,7 @@ import {
 export async function GET() {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ remaining: 5, used: 0 });
+    return NextResponse.json({ remaining: FREE_SCANS_PER_DAY, used: 0 });
   }
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ remaining: 0 }, { status: 404 });
@@ -43,7 +43,6 @@ export async function POST(req: Request) {
     nutrients: unknown;
     veganScore: number;
     veganWhy: string;
-    consumeScan?: boolean;
     /** Claim leaf points for cooking (requires proof). */
     claimCook?: boolean;
     proofComment?: string;
@@ -58,19 +57,7 @@ export async function POST(req: Request) {
   }
 
   const day = localDate();
-  if (body.consumeScan) {
-    const rem = remainingScans(user.role, user.scansToday, user.scansDate, user.trialEndsAt);
-    if (rem !== Infinity && rem <= 0) {
-      return NextResponse.json({ error: "Quota de scans atteint. Passe à l'abonnement." }, { status: 402 });
-    }
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        scansDate: day,
-        scansToday: user.scansDate === day ? user.scansToday + 1 : 1,
-      },
-    });
-  }
+  // Scans are counted on /api/scan (and beauty) — never again when logging a meal.
 
   let leafEarned = 0;
   let challengeBonus = false;

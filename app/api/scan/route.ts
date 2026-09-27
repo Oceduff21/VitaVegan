@@ -5,9 +5,8 @@ import { analyzeProduct, fetchOpenFoodFacts } from "@/lib/openfoodfacts/client";
 import { inspectBarcode } from "@/lib/barcode";
 import { isLocale, type Locale } from "@/lib/i18n/dictionaries";
 import { prisma } from "@/lib/prisma";
-import { remainingScans } from "@/lib/billing";
+import { consumeScanQuota } from "@/lib/billing";
 import { rememberScan } from "@/lib/scans";
-import { localDate } from "@/lib/dates";
 import { allergenHitsFromPrefsJson } from "@/lib/allergens";
 import { planetFromOff } from "@/lib/planet";
 import { localizeScore } from "@/lib/i18n/engine";
@@ -23,21 +22,6 @@ import {
 import { crueltyFromTags } from "@/lib/cruelty";
 import { contributeScannedProduct, isUserScannedSource } from "@/lib/catalog";
 
-async function consumeScan(userId: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return { ok: false as const, remaining: 0, prefs: "{}" };
-  const rem = remainingScans(user.role, user.scansToday, user.scansDate, user.trialEndsAt);
-  if (rem !== Infinity && rem <= 0) return { ok: false as const, remaining: 0, prefs: user.prefs };
-  const day = localDate();
-  if (rem !== Infinity) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { scansDate: day, scansToday: user.scansDate === day ? user.scansToday + 1 : 1 },
-    });
-  }
-  return { ok: true as const, remaining: rem === Infinity ? rem : rem - 1, prefs: user.prefs };
-}
-
 function looksLikeFood(energy?: number, proteins?: number) {
   return (energy ?? 0) > 0 || (proteins ?? 0) > 0;
 }
@@ -49,7 +33,7 @@ export async function POST(req: Request) {
   if (!session?.user) {
     return NextResponse.json({ error: "auth" }, { status: 401 });
   }
-  const quota = await consumeScan(session.user.id);
+  const quota = await consumeScanQuota(session.user.id);
   if (!quota.ok) {
     return NextResponse.json({ error: "quota", remaining: 0 }, { status: 402 });
   }

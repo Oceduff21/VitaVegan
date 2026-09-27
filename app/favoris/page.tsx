@@ -6,10 +6,30 @@ import { FavoritesHub } from "@/components/FavoritesHub";
 import { recipeLocale } from "@/lib/i18n/recipes";
 import { recipeCover } from "@/data/recipe-covers";
 import { normalizeArticleKind } from "@/lib/article-kind";
+import { isPremium } from "@/lib/entitlements";
 
 export default async function FavorisPage() {
   const session = await requireAuth();
   const { t, locale } = await getT();
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true, trialEndsAt: true },
+  });
+  const premium = isPremium(user?.role, user?.trialEndsAt);
+
+  if (!premium) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-xl sm:text-3xl">{t("fav.hubTitle")}</h1>
+        <p className="rounded-2xl bg-white p-4 text-sm text-ink/80">
+          {t("fav.locked")}{" "}
+          <Link href="/compte?locked=1" className="font-semibold text-forest underline">
+            {t("account.upgrade")}
+          </Link>
+        </p>
+      </div>
+    );
+  }
 
   const [productFavs, recipeFavs] = await Promise.all([
     prisma.productFav.findMany({

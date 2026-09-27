@@ -40,7 +40,6 @@ export function SupplementLogger() {
         nutrients,
         veganScore: 5,
         veganWhy: t("supp.why"),
-        consumeScan: false,
       }),
     });
     setBusy(null);

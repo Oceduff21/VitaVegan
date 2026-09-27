@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizeArticleKind } from "@/lib/article-kind";
+import { isPremium } from "@/lib/entitlements";
 
 export async function GET() {
   const session = await auth();
@@ -21,6 +22,11 @@ export async function GET() {
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "auth" }, { status: 401 });
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!user) return NextResponse.json({ error: "auth" }, { status: 401 });
+  if (!isPremium(user.role, user.trialEndsAt)) {
+    return NextResponse.json({ error: "premium" }, { status: 402 });
+  }
   const body = (await req.json()) as {
     action?: string;
     kind?: string;

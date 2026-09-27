@@ -4,7 +4,7 @@ import { fetchOpenBeautyFacts, analyzeBeauty } from "@/lib/openbeautyfacts/clien
 import { inspectBarcode } from "@/lib/barcode";
 import { isLocale, type Locale } from "@/lib/i18n/dictionaries";
 import { prisma } from "@/lib/prisma";
-import { remainingScans } from "@/lib/billing";
+import { consumeScanQuota } from "@/lib/billing";
 import { analyzeIngredients } from "@/lib/vegan/analyze";
 import { compassionScore } from "@/lib/score/compassion";
 import { rememberScan } from "@/lib/scans";
@@ -15,17 +15,13 @@ export async function POST(req: Request) {
   const lang: Locale = isLocale(body.lang) ? body.lang : "fr";
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "auth" }, { status: 401 });
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!user) return NextResponse.json({ error: "auth" }, { status: 401 });
-  const rem = remainingScans(user.role, user.scansToday, user.scansDate, user.trialEndsAt);
-  if (rem !== Infinity && rem <= 0) return NextResponse.json({ error: "quota" }, { status: 402 });
-  if (rem !== Infinity) {
-    const day = new Date().toISOString().slice(0, 10);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { scansDate: day, scansToday: user.scansDate === day ? user.scansToday + 1 : 1 },
-    });
+
+  const quota = await consumeScanQuota(session.user.id);
+  if (!quota.ok) {
+    return NextResponse.json({ error: "quota", remaining: 0 }, { status: 402 });
   }
+  const remaining = quota.remaining === Infinity ? "unlimited" : quota.remaining;
+
   if (!body.barcode) return NextResponse.json({ error: "barcode" }, { status: 400 });
 
   const local = await prisma.catalogProduct.findFirst({
@@ -47,6 +43,7 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({
       kind: "cosmetic",
+      remaining,
       product: {
         barcode: local.barcode,
         barcodeInfo: inspectBarcode(local.barcode),
@@ -65,7 +62,10 @@ export async function POST(req: Request) {
 
   const product = await fetchOpenBeautyFacts(body.barcode, lang);
   if (!product) {
-    return NextResponse.json({ error: "not_found", barcode: inspectBarcode(body.barcode), create: true }, { status: 404 });
+    return NextResponse.json(
+      { error: "not_found", barcode: inspectBarcode(body.barcode), create: true, remaining },
+      { status: 404 },
+    );
   }
   const { analysis, score: raw } = analyzeBeauty(product);
   const score = localizeScore(raw, lang);
@@ -79,5 +79,5 @@ export async function POST(req: Request) {
     veganWhy: score.why,
     cruelty: product.cruelty,
   });
-  return NextResponse.json({ kind: "cosmetic", product, analysis, score });
+  return NextResponse.json({ kind: "cosmetic", product, analysis, score, remaining });
 }

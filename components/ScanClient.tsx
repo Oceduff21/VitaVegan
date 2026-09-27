@@ -32,6 +32,7 @@ import { nutrientCoverage } from "@/lib/nutrition/gauges";
 import { scaleNutrients as scaleMap } from "@/lib/nutrition/scale";
 import { ScanPostActions } from "@/components/ScanPostActions";
 import { ShareScoreCard } from "@/components/ShareScoreCard";
+import { ProductFavoriteButton } from "@/components/ProductFavoriteButton";
 
 type ScanKind = "food" | "beauty" | ArticleKind;
 
@@ -137,7 +138,6 @@ export function ScanClient({
   const [saved, setSaved] = useState(false);
   const [missingCode, setMissingCode] = useState<string | null>(null);
   const [grams, setGrams] = useState(100);
-  const [faved, setFaved] = useState(false);
   const [remaining, setRemaining] = useState(remainingProp);
   const [community, setCommunity] = useState<CommunityMeta | null>(null);
 
@@ -156,7 +156,6 @@ export function ScanClient({
     setHits([]);
     setError(null);
     setSaved(false);
-    setFaved(false);
     setMissingCode(null);
     setCommunity(null);
   }
@@ -176,7 +175,6 @@ export function ScanClient({
     setLoading(true);
     setError(null);
     setSaved(false);
-    setFaved(false);
     setMissingCode(null);
     setFood(null);
     setBeauty(null);
@@ -279,7 +277,6 @@ export function ScanClient({
         nutrients,
         veganScore: food.score.score,
         veganWhy: food.score.why,
-        consumeScan: false,
       }),
     });
     const data = await res.json();
@@ -290,33 +287,31 @@ export function ScanClient({
     setSaved(true);
   }
 
-  async function fav() {
-    const barcode = food?.product.barcode || beauty?.product.barcode || goods?.product.barcode;
-    const name = food?.product.name || beauty?.product.name || goods?.product.name;
-    const image = food?.product.image || beauty?.product.image || goods?.product.image;
-    const score = food?.score.score ?? beauty?.score.score ?? goods?.score.score;
-    const favKind = food ? "food" : beauty ? "cosmetic" : (goods?.kind ?? "other");
-    if (!barcode) return;
-    const res = await fetch("/api/history", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        barcode,
-        kind: favKind,
-        name,
-        image,
-        veganScore: score,
-      }),
-    });
-    if (res.ok) setFaved(true);
-  }
-
   const n = food?.product.nutrimentsRaw;
   const info = food?.product.barcodeInfo;
   const factor = grams / 100;
   const hasResult = Boolean(food || beauty || goods || missingCode !== null);
-  const canFav = Boolean(food?.product.barcode || beauty?.product.barcode || goods?.product.barcode);
   const recipeQuery = food?.product.name || food?.product.brands || "";
+
+  function productFav(props: {
+    barcode?: string;
+    kind: string;
+    name?: string;
+    image?: string | null;
+    score?: number;
+  }) {
+    if (!props.barcode) return null;
+    return (
+      <ProductFavoriteButton
+        compact
+        barcode={props.barcode}
+        kind={props.kind}
+        name={props.name}
+        image={props.image}
+        veganScore={props.score}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -493,6 +488,13 @@ export function ScanClient({
                   </p>
                 ) : null
               }
+              favorite={productFav({
+                barcode: food.product.barcode,
+                kind: "food",
+                name: food.product.name,
+                image: food.product.image,
+                score: food.score.score,
+              })}
             />
           }
           detailsLabel={t("scan.details")}
@@ -620,6 +622,13 @@ export function ScanClient({
                   t={t}
                 />
               }
+              favorite={productFav({
+                barcode: beauty.product.barcode,
+                kind: "cosmetic",
+                name: beauty.product.name,
+                image: beauty.product.image,
+                score: beauty.score.score,
+              })}
             />
           }
           detailsLabel={t("scan.details")}
@@ -677,6 +686,13 @@ export function ScanClient({
                   <VerdictBadges cruelty={goods.product.cruelty} t={t} />
                 ) : null
               }
+              favorite={productFav({
+                barcode: goods.product.barcode,
+                kind: goods.kind,
+                name: goods.product.name,
+                image: goods.product.image,
+                score: goods.score.score,
+              })}
             />
           }
           detailsLabel={t("scan.details")}
@@ -708,18 +724,6 @@ export function ScanClient({
           <button type="button" className="btn btn-primary" onClick={newScan}>
             {t("scan.newScan")}
           </button>
-          {canFav ? (
-            <>
-              <button type="button" className="btn btn-secondary" onClick={() => void fav()}>
-                {faved ? t("hist.faved") : t("scan.addFav")}
-              </button>
-              {faved ? (
-                <Link href="/favoris" className="btn btn-ghost text-center text-sm">
-                  {t("scan.seeProductFavs")}
-                </Link>
-              ) : null}
-            </>
-          ) : null}
           {food?.product.barcode ? (
             <Link href={`/comparer?a=${food.product.barcode}`} className="btn btn-secondary text-center">
               {t("cmp.title")}

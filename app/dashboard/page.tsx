@@ -97,50 +97,36 @@ export default async function DashboardPage() {
       <section>
         <h2 className="mb-3 text-xl">{t("history.title")}</h2>
         {premium ? (
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-4">
             {days.map((d) => {
               const dayLogs = logs.filter((l) => l.date === d);
               const sum = dayLogs.length ? sumLogs(dayLogs.map((l) => l.nutrients)) : emptyNutrients();
               const dayGauges = buildGauges(sum, targets);
               const lows = focusLowGauges(dayGauges);
               return (
-                <li key={d} className="rounded-2xl bg-white px-4 py-3 text-sm">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <li key={d} className="rounded-2xl bg-white px-4 py-3 sm:px-5 sm:py-4">
+                  <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
                     <p className="font-medium">
                       {formatFriendlyDay(d, locale, {
                         today: t("date.today"),
                         yesterday: t("date.yesterday"),
                       })}
                     </p>
-                    <p className="text-ink/55">
-                      {dayLogs.length} · {Math.round(sum.calories)} kcal · {Math.round(sum.protein)} g{" "}
-                      {t("nutri.protein").toLowerCase()}
+                    <p className="text-sm text-ink/55">
+                      {dayLogs.length
+                        ? `${dayLogs.length} · ${Math.round(sum.calories)} kcal · ${Math.round(sum.protein)} g ${t("nutri.protein").toLowerCase()}`
+                        : t("dashboard.empty")}
                     </p>
                   </div>
                   {dayLogs.length > 0 ? (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {dayGauges
-                        .filter((g) => g.focus)
-                        .map((g) => (
-                          <span
-                            key={g.key}
-                            className={`rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${
-                              g.displayRatio < 0.7
-                                ? "bg-terracotta/15 text-terracotta"
-                                : "bg-leaf/18 text-forest"
-                            }`}
-                          >
-                            {gaugeLabel(locale, g.key)} {Math.min(100, g.percent)}%
-                          </span>
-                        ))}
-                    </div>
-                  ) : (
-                    <p className="mt-1 text-xs text-ink/45">{t("dashboard.empty")}</p>
-                  )}
-                  {lows.length > 0 && dayLogs.length > 0 ? (
-                    <p className="mt-1 text-[0.7rem] text-ink/50">
-                      {t("gauge.dayLow")}: {lows.map((g) => gaugeLabel(locale, g.key)).join(", ")}
-                    </p>
+                    <>
+                      <NutrientGauges gauges={dayGauges} compact showTips={false} />
+                      {lows.length > 0 ? (
+                        <p className="mt-2 text-[0.7rem] text-ink/50">
+                          {t("gauge.dayLow")}: {lows.map((g) => gaugeLabel(locale, g.key)).join(", ")}
+                        </p>
+                      ) : null}
+                    </>
                   ) : null}
                 </li>
               );

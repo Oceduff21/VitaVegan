@@ -40,6 +40,7 @@ export function ScanStickyHead({
   badges,
   remaining,
   community,
+  favorite,
 }: {
   mode: string;
   name: string;
@@ -49,12 +50,16 @@ export function ScanStickyHead({
   badges: ReactNode;
   remaining?: ReactNode;
   community?: ReactNode;
+  favorite?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-2 p-3 sm:gap-3 sm:p-5">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-forest sm:text-xs">{mode}</p>
-        {remaining}
+        <div className="flex items-center gap-2">
+          {favorite}
+          {remaining}
+        </div>
       </div>
       <div className="flex gap-2.5 sm:gap-3">
         {image ? (
