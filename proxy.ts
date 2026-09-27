@@ -14,7 +14,7 @@ function localeFromAccept(header: string | null): string {
 }
 
 /** Set Verdegan-lang from Accept-Language on first visit (cookie wins thereafter). */
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   if (req.cookies.get(LANG_COOKIE)?.value) {
     return NextResponse.next();
   }
