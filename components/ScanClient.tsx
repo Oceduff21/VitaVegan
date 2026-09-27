@@ -367,6 +367,15 @@ export function ScanClient({
         </div>
       ) : null}
 
+      {cam.status === "failed" ? (
+        <div className="rounded-2xl bg-white p-4 ring-1 ring-ink/10">
+          <p className="text-sm text-ink/80">{t("scan.cameraFail")}</p>
+          <button type="button" onClick={startScan} className="btn btn-secondary mt-3">
+            {t("scan.permRetry")}
+          </button>
+        </div>
+      ) : null}
+
       {cam.status === "live" ? (
         <CameraScanner
           liveLabel={t("scan.live")}
@@ -377,6 +386,7 @@ export function ScanClient({
           onReady={cam.granted}
           onStop={cam.pause}
           onDenied={cam.denied}
+          onFail={cam.fail}
           onCode={(code) => void runScan({ barcode: code })}
         />
       ) : null}

@@ -1,56 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useI18n } from "@/components/i18n/LanguageProvider";
+import type { DailyQuestionView } from "@/lib/daily-question";
 
-type Choice = { id: string; label: string };
-type Question = { id: string; prompt: string; choices: Choice[] };
-
-type State = {
-  question: Question;
-  answered: boolean;
-  correct: boolean | null;
-  explanation: string | null;
-  answerId: string | null;
-  reward: number;
-};
-
-export function DailyQuestionCard() {
+export function DailyQuestionCard({ initial }: { initial: DailyQuestionView }) {
   const { t } = useI18n();
-  const [state, setState] = useState<State | null>(null);
+  const [state, setState] = useState<DailyQuestionView>(initial);
   const [busy, setBusy] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [earned, setEarned] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/daily-question");
-      if (!res.ok) {
-        setError(t("dailyq.loadFail"));
-        setState(null);
-        return;
-      }
-      const json = (await res.json()) as State;
-      setState(json);
-    } catch {
-      setError(t("dailyq.loadFail"));
-      setState(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
   async function answer(choiceId: string) {
-    if (!state || state.answered || busy) return;
+    if (state.answered || busy) return;
     setBusy(true);
     setPicked(choiceId);
     setError(null);
@@ -67,6 +31,7 @@ export function DailyQuestionCard() {
         reward?: number;
         balance?: number | null;
         already?: boolean;
+        error?: string;
       };
       if (!res.ok) {
         setError(t("dailyq.answerFail"));
@@ -75,17 +40,13 @@ export function DailyQuestionCard() {
       }
       if (typeof json.balance === "number") setBalance(json.balance);
       if (!json.already && typeof json.reward === "number") setEarned(json.reward);
-      setState((prev) =>
-        prev
-          ? {
-              ...prev,
-              answered: true,
-              correct: Boolean(json.correct),
-              explanation: json.explanation ?? null,
-              answerId: json.answerId ?? null,
-            }
-          : prev,
-      );
+      setState((prev) => ({
+        ...prev,
+        answered: true,
+        correct: Boolean(json.correct),
+        explanation: json.explanation ?? null,
+        answerId: json.answerId ?? null,
+      }));
     } catch {
       setError(t("dailyq.answerFail"));
       setPicked(null);
@@ -94,30 +55,15 @@ export function DailyQuestionCard() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="rounded-2xl border border-leaf/25 bg-leaf/8 p-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-leaf">{t("dailyq.title")}</p>
-        <p className="mt-2 text-sm text-ink/55">{t("dailyq.loading")}</p>
-      </div>
-    );
-  }
-
-  if (error && !state) {
+  const { question, answered, correct, explanation, answerId, reward } = state;
+  if (!question?.prompt || !question.choices?.length) {
     return (
       <div className="rounded-2xl border border-terracotta/25 bg-terracotta/5 p-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-leaf">{t("dailyq.title")}</p>
-        <p className="mt-2 text-sm text-terracotta">{error}</p>
-        <button type="button" className="btn btn-secondary mt-2 text-sm" onClick={() => void load()}>
-          {t("dailyq.retry")}
-        </button>
+        <p className="mt-2 text-sm text-terracotta">{t("dailyq.loadFail")}</p>
       </div>
     );
   }
-
-  if (!state) return null;
-
-  const { question, answered, correct, explanation, answerId, reward } = state;
 
   return (
     <div className="rounded-2xl border border-leaf/25 bg-leaf/8 p-3">
@@ -126,12 +72,13 @@ export function DailyQuestionCard() {
 
       <div className="mt-3 flex flex-col gap-2">
         {question.choices.map((c) => {
-          const isPicked = picked === c.id || (answered && picked === c.id);
+          const isPicked = picked === c.id;
           const isAnswer = answered && c.id === answerId;
           const isWrongPick = answered && isPicked && c.id !== answerId;
           let cls = "btn btn-secondary w-full justify-start text-left";
           if (isAnswer) cls = "btn w-full justify-start text-left bg-forest/15 text-forest ring-1 ring-forest/30";
-          else if (isWrongPick) cls = "btn w-full justify-start text-left bg-terracotta/10 text-terracotta ring-1 ring-terracotta/25";
+          else if (isWrongPick)
+            cls = "btn w-full justify-start text-left bg-terracotta/10 text-terracotta ring-1 ring-terracotta/25";
           else if (answered) cls = "btn btn-secondary w-full justify-start text-left opacity-55";
 
           return (

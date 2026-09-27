@@ -14,11 +14,27 @@ export function FriendsClient() {
   const [data, setData] = useState<FriendsPayload | null>(null);
   const [handle, setHandle] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/friends");
-    if (res.ok) setData((await res.json()) as FriendsPayload);
-  }, []);
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/friends");
+      if (!res.ok) {
+        setError(t("friends.fail"));
+        setData(null);
+        return;
+      }
+      setData((await res.json()) as FriendsPayload);
+    } catch {
+      setError(t("friends.fail"));
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -62,52 +78,76 @@ export function FriendsClient() {
         </button>
       </section>
 
-      {data?.pendingIn.length ? (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg">{t("friends.incoming")}</h2>
-          <ul className="flex flex-col gap-2">
-            {data.pendingIn.map((p) => (
-              <li key={p.friendshipId} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-sand/50 px-3 py-2">
-                <span>{p.fromHandle}</span>
-                <span className="flex gap-2">
-                  <button type="button" className="btn btn-primary text-sm" onClick={() => void respond(p.fromHandle, "accept")}>
-                    {t("friends.accept")}
-                  </button>
-                  <button type="button" className="btn btn-secondary text-sm" onClick={() => void respond(p.fromHandle, "decline")}>
-                    {t("friends.decline")}
-                  </button>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      {loading ? (
+        <p className="text-sm text-ink/55">{t("friends.loading")}</p>
+      ) : error ? (
+        <div className="space-y-2">
+          <p className="text-sm text-terracotta">{error}</p>
+          <button type="button" className="btn btn-secondary text-sm" onClick={() => void load()}>
+            {t("friends.retry")}
+          </button>
+        </div>
+      ) : (
+        <>
+          {data?.pendingIn.length ? (
+            <section className="flex flex-col gap-2">
+              <h2 className="text-lg">{t("friends.incoming")}</h2>
+              <ul className="flex flex-col gap-2">
+                {data.pendingIn.map((p) => (
+                  <li
+                    key={p.friendshipId}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-sand/50 px-3 py-2"
+                  >
+                    <span>{p.fromHandle}</span>
+                    <span className="flex gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-primary text-sm"
+                        onClick={() => void respond(p.fromHandle, "accept")}
+                      >
+                        {t("friends.accept")}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary text-sm"
+                        onClick={() => void respond(p.fromHandle, "decline")}
+                      >
+                        {t("friends.decline")}
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
-      {data?.pendingOut.length ? (
-        <section>
-          <h2 className="text-lg">{t("friends.outgoing")}</h2>
-          <ul className="mt-2 text-sm text-ink/65">
-            {data.pendingOut.map((p) => (
-              <li key={p.friendshipId}>{p.toHandle}</li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+          {data?.pendingOut.length ? (
+            <section>
+              <h2 className="text-lg">{t("friends.outgoing")}</h2>
+              <ul className="mt-2 text-sm text-ink/65">
+                {data.pendingOut.map((p) => (
+                  <li key={p.friendshipId}>{p.toHandle}</li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
-      <section>
-        <h2 className="text-lg">{t("friends.list")}</h2>
-        {data?.friends.length ? (
-          <ul className="mt-2 flex flex-col gap-1">
-            {data.friends.map((f) => (
-              <li key={f.id} className="rounded-xl bg-white px-3 py-2 ring-1 ring-ink/8">
-                {f.handle}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-ink/55">{t("friends.empty")}</p>
-        )}
-      </section>
+          <section>
+            <h2 className="text-lg">{t("friends.list")}</h2>
+            {data?.friends.length ? (
+              <ul className="mt-2 flex flex-col gap-1">
+                {data.friends.map((f) => (
+                  <li key={f.id} className="rounded-xl bg-white px-3 py-2 ring-1 ring-ink/8">
+                    {f.handle}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-sm text-ink/55">{t("friends.empty")}</p>
+            )}
+          </section>
+        </>
+      )}
 
       <p className="text-sm text-ink/55">{t("friends.shareHint")}</p>
 

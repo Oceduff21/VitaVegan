@@ -63,7 +63,6 @@ export default async function HomePage() {
           actionLabel={t("home.academyCta")}
         >
           <HomeAcademyInvite
-            title={t("academy.title")}
             lead={t("home.academyLead")}
             cta={t("home.academyCta")}
             chips={[

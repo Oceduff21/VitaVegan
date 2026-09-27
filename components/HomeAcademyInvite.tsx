@@ -9,7 +9,8 @@ export function HomeAcademyInvite({
   href = "/academie",
   chips,
 }: {
-  title: string;
+  /** Omit when already wrapped in a HomeSection titled Académie. */
+  title?: string;
   lead: string;
   cta: string;
   href?: string;
@@ -22,8 +23,12 @@ export function HomeAcademyInvite({
           <IconAcademy className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="display text-[0.95rem] leading-tight text-cream sm:text-lg">{title}</h2>
-          <p className="mt-0.5 line-clamp-2 text-[0.7rem] leading-snug text-cream/80 sm:line-clamp-1 sm:text-xs">
+          {title ? (
+            <h2 className="display text-[0.95rem] leading-tight text-cream sm:text-lg">{title}</h2>
+          ) : null}
+          <p
+            className={`${title ? "mt-0.5" : ""} line-clamp-2 text-[0.7rem] leading-snug text-cream/80 sm:line-clamp-1 sm:text-xs`}
+          >
             {lead}
           </p>
           {chips && chips.length > 0 ? (
@@ -40,12 +45,14 @@ export function HomeAcademyInvite({
             </div>
           ) : null}
         </div>
-        <Link
-          href={href}
-          className="btn btn-secondary h-8 min-h-8 shrink-0 border-0 px-3 text-xs sm:h-9 sm:min-h-9 sm:px-4 sm:text-sm"
-        >
-          {cta}
-        </Link>
+        {title ? (
+          <Link
+            href={href}
+            className="btn btn-secondary h-8 min-h-8 shrink-0 border-0 px-3 text-xs sm:h-9 sm:min-h-9 sm:px-4 sm:text-sm"
+          >
+            {cta}
+          </Link>
+        ) : null}
       </div>
     </section>
   );

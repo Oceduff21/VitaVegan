@@ -1,53 +1,71 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { killAllCameras, requestCameraStream, setTorch, torchSupported } from "@/lib/camera";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+
 type BarcodeDetectorLike = {
   detect: (source: HTMLVideoElement) => Promise<{ rawValue: string }[]>;
 };
 
-function getDetector(): BarcodeDetectorLike | null {
-  const Ctor = (window as unknown as { BarcodeDetector?: new (opts: { formats: string[] }) => BarcodeDetectorLike }).BarcodeDetector;
+const NATIVE_FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "itf", "qr_code"];
+const ANGLES = [0, 90, 270] as const;
+
+function getNativeDetector(): BarcodeDetectorLike | null {
+  const Ctor = (window as unknown as { BarcodeDetector?: new (opts: { formats: string[] }) => BarcodeDetectorLike })
+    .BarcodeDetector;
   if (!Ctor) return null;
   try {
-    return new Ctor({
-      formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "itf", "qr_code"],
-    });
+    return new Ctor({ formats: NATIVE_FORMATS });
   } catch {
     return null;
   }
 }
 
-async function decodeFrame(video: HTMLVideoElement): Promise<string | null> {
+/** Capture center square, optionally rotated so vertical barcodes become horizontal for ZXing. */
+function captureOrientedFrame(video: HTMLVideoElement, angle: (typeof ANGLES)[number]): Promise<File | null> {
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  if (vw < 40 || vh < 40) return Promise.resolve(null);
+
+  const side = Math.floor(Math.min(vw, vh) * 0.88);
+  const sx = Math.floor((vw - side) / 2);
+  const sy = Math.floor((vh - side) / 2);
+
   const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = side;
+  canvas.height = side;
   const ctx = canvas.getContext("2d");
-  if (!ctx || canvas.width < 20) return null;
-  ctx.drawImage(video, 0, 0);
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.7));
-  if (!blob) return null;
-  const file = new File([blob], "frame.jpg", { type: "image/jpeg" });
-  const { Html5Qrcode } = await import("html5-qrcode");
-  const qr = new Html5Qrcode("qr-fallback", { verbose: false });
-  try {
-    const text = await qr.scanFile(file, false);
-    return text?.trim() || null;
-  } catch {
-    return null;
-  } finally {
-    try {
-      qr.clear();
-    } catch {
-      /* ignore */
-    }
+  if (!ctx) return Promise.resolve(null);
+
+  if (angle === 0) {
+    ctx.drawImage(video, sx, sy, side, side, 0, 0, side, side);
+  } else if (angle === 90) {
+    ctx.translate(side, 0);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(video, sx, sy, side, side, 0, 0, side, side);
+  } else {
+    ctx.translate(0, side);
+    ctx.rotate(-Math.PI / 2);
+    ctx.drawImage(video, sx, sy, side, side, 0, 0, side, side);
   }
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        resolve(null);
+        return;
+      }
+      resolve(new File([blob], `frame-${angle}.jpg`, { type: "image/jpeg" }));
+    }, "image/jpeg", 0.92);
+  });
 }
 
 export function CameraScanner({
   onCode,
   onStop,
   onDenied,
+  onFail,
   onReady,
   liveLabel,
   closeLabel,
@@ -58,6 +76,7 @@ export function CameraScanner({
   onCode: (value: string) => void;
   onStop: () => void;
   onDenied: () => void;
+  onFail?: () => void;
   onReady?: () => void;
   liveLabel: string;
   closeLabel: string;
@@ -65,19 +84,25 @@ export function CameraScanner({
   flashOffLabel: string;
   flashUnavailable: string;
 }) {
+  const reactId = useId().replace(/:/g, "");
+  const decoderHostId = `qr-orient-${reactId}`;
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const decoderRef = useRef<Html5Qrcode | null>(null);
   const timerRef = useRef<number>(0);
   const busyRef = useRef(false);
+  const angleIdxRef = useRef(0);
   const onCodeRef = useRef(onCode);
   const onStopRef = useRef(onStop);
   const onDeniedRef = useRef(onDenied);
+  const onFailRef = useRef(onFail);
   const onReadyRef = useRef(onReady);
   const [torchOn, setTorchOn] = useState(false);
   const [torchOk, setTorchOk] = useState(false);
   onCodeRef.current = onCode;
   onStopRef.current = onStop;
   onDeniedRef.current = onDenied;
+  onFailRef.current = onFail;
   onReadyRef.current = onReady;
 
   useEffect(() => {
@@ -97,9 +122,74 @@ export function CameraScanner({
         t.enabled = false;
       });
       streamRef.current = null;
+      const decoder = decoderRef.current;
+      decoderRef.current = null;
+      if (decoder) {
+        try {
+          decoder.clear();
+        } catch {
+          /* ignore */
+        }
+      }
       setTorchOn(false);
       setTorchOk(false);
       killAllCameras();
+    }
+
+    async function ensureDecoder(): Promise<Html5Qrcode | null> {
+      if (decoderRef.current) return decoderRef.current;
+      try {
+        const decoder = new Html5Qrcode(decoderHostId, {
+          verbose: false,
+          useBarCodeDetectorIfSupported: false,
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.QR_CODE,
+          ],
+        });
+        decoderRef.current = decoder;
+        return decoder;
+      } catch {
+        return null;
+      }
+    }
+
+    async function decodeOnce(video: HTMLVideoElement): Promise<string | null> {
+      // Native detector (good on Android) often accepts any orientation.
+      const native = getNativeDetector();
+      if (native) {
+        try {
+          const codes = await native.detect(video);
+          const value = codes[0]?.rawValue?.trim();
+          if (value) return value;
+        } catch {
+          /* fall through to ZXing */
+        }
+      }
+
+      const decoder = await ensureDecoder();
+      if (!decoder || cancelled) return null;
+
+      // Try two orientations per tick so horizontal + vertical both land quickly.
+      for (let i = 0; i < 2; i++) {
+        const angle = ANGLES[angleIdxRef.current % ANGLES.length]!;
+        angleIdxRef.current += 1;
+        const file = await captureOrientedFrame(video, angle);
+        if (!file || cancelled) return null;
+        try {
+          const text = await decoder.scanFile(file, false);
+          const value = text?.trim();
+          if (value) return value;
+        } catch {
+          /* try next angle */
+        }
+      }
+      return null;
     }
 
     async function run() {
@@ -119,22 +209,11 @@ export function CameraScanner({
         onReadyRef.current?.();
         setTorchOk(torchSupported(stream));
 
-        const detector = getDetector();
         const tick = async () => {
           if (cancelled || busyRef.current) return;
           const el = videoRef.current;
           if (el && el.readyState >= 2) {
-            let value: string | null = null;
-            if (detector) {
-              try {
-                const codes = await detector.detect(el);
-                value = codes[0]?.rawValue?.trim() ?? null;
-              } catch {
-                value = null;
-              }
-            } else {
-              value = await decodeFrame(el);
-            }
+            const value = await decodeOnce(el);
             if (value) {
               busyRef.current = true;
               shutdown();
@@ -142,24 +221,31 @@ export function CameraScanner({
               return;
             }
           }
-          timerRef.current = window.setTimeout(() => void tick(), detector ? 160 : 400);
+          timerRef.current = window.setTimeout(() => void tick(), 280);
         };
         void tick();
       } catch (err) {
-        const name = err instanceof DOMException ? err.name : "";
+        if (cancelled) return;
         shutdown();
-        if (name === "NotAllowedError" || name === "PermissionDeniedError") onDeniedRef.current();
-        else onStopRef.current();
+        const name = err instanceof DOMException ? err.name : "";
+        const msg = err instanceof Error ? err.message : String(err);
+        if (
+          name === "NotAllowedError" ||
+          name === "PermissionDeniedError" ||
+          /not allowed|permission|denied/i.test(msg)
+        ) {
+          onDeniedRef.current();
+        } else {
+          onFailRef.current?.();
+        }
       }
     }
 
     void run();
 
-    const hide = () => {
-      if (document.visibilityState === "hidden") {
-        shutdown();
-        onStopRef.current();
-      }
+    const onPageHide = () => {
+      shutdown();
+      onStopRef.current();
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -168,20 +254,18 @@ export function CameraScanner({
       }
     };
 
-    document.addEventListener("visibilitychange", hide);
-    window.addEventListener("pagehide", hide);
+    window.addEventListener("pagehide", onPageHide);
     window.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     return () => {
-      document.removeEventListener("visibilitychange", hide);
-      window.removeEventListener("pagehide", hide);
+      window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
       shutdown();
     };
-  }, []);
+  }, [decoderHostId]);
 
   return (
     <div className="scan-cam-overlay" role="dialog" aria-modal="true" aria-label={liveLabel}>
@@ -230,8 +314,14 @@ export function CameraScanner({
         </svg>
       </button>
       <p className="scan-cam-hint">{liveLabel}</p>
-      <video ref={videoRef} className="scan-cam-video" autoPlay muted playsInline />
-      <div id="qr-fallback" className="hidden" />
+      <div className="scan-cam-stage">
+        <video ref={videoRef} className="scan-cam-video" autoPlay muted playsInline />
+        <div className="scan-cam-reticle" aria-hidden>
+          <span className="scan-cam-reticle-h" />
+          <span className="scan-cam-reticle-v" />
+        </div>
+      </div>
+      <div id={decoderHostId} className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0" aria-hidden />
     </div>
   );
 }

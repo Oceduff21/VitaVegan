@@ -15,6 +15,7 @@ import { HomeNotifications } from "@/components/HomeNotifications";
 import { buildReminders } from "@/lib/reminders";
 import { resolveLeafLevel } from "@/lib/leaf-rewards";
 import { unreadNotifications } from "@/lib/notifications";
+import { getDailyQuestionView } from "@/lib/daily-question";
 
 /** Compact “today” content for premium Accueil (wrapped by HomeSection). */
 export async function HomeDayHub() {
@@ -54,13 +55,14 @@ export async function HomeDayHub() {
     },
   }).slice(0, 2);
   const notifs = prefs.notifLeaf ? await unreadNotifications(user.id, 3) : [];
+  const dailyQ = await getDailyQuestionView(user.id, day);
 
   return (
     <div className="flex flex-col gap-3 sm:gap-4">
       <p className="text-sm text-ink/60">
         {t(level.current.titleKey)} · {t("leaf.balance").replace("{n}", String(user.leafPoints))}
       </p>
-      <DailyQuestionCard />
+      <DailyQuestionCard initial={dailyQ} />
       <HomeNotifications
         items={notifs.map((n) => ({
           id: n.id,

@@ -5,7 +5,7 @@ import { cameraPermissionState, killAllCameras } from "@/lib/camera";
 
 const KEY = "verdegan-camera-ok";
 
-export type CamStatus = "need-allow" | "ready" | "live" | "denied";
+export type CamStatus = "ready" | "live" | "denied" | "failed";
 
 export function useScanCamera() {
   const [status, setStatus] = useState<CamStatus>("ready");
@@ -42,9 +42,13 @@ export function useScanCamera() {
     killAllCameras();
     setStatus("denied");
   }, []);
+  const fail = useCallback(() => {
+    killAllCameras();
+    setStatus("failed");
+  }, []);
   const granted = useCallback(() => {
     window.localStorage.setItem(KEY, "1");
   }, []);
 
-  return { status, resume, pause, denied, granted };
+  return { status, resume, pause, denied, fail, granted };
 }

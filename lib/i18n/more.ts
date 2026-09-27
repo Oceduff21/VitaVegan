@@ -2827,6 +2827,8 @@
   "friends.decline": ["Refuser", "Decline", "Decline", "Decline", "Decline", "Decline", "Decline", "Decline"],
   "friends.sent": ["Demande envoyée", "Request sent", "Request sent", "Request sent", "Request sent", "Request sent", "Request sent", "Request sent"],
   "friends.fail": ["Action impossible", "Could not complete", "Could not complete", "Could not complete", "Could not complete", "Could not complete", "Could not complete", "Could not complete"],
+  "friends.retry": ["Réessayer", "Retry", "Erneut", "Reintentar", "Riprova", "Opnieuw", "Tentar de novo", "Spróbuj ponownie"],
+  "friends.loading": ["Chargement…", "Loading…", "Laden…", "Cargando…", "Caricamento…", "Laden…", "A carregar…", "Ładowanie…"],
   "friends.shareHint": ["Astuce : ouvre une recette et appuie sur Partager à un ami.", "Tip: open a recipe and tap Share with a friend.", "Tipp: Rezept öffnen und Mit Freund teilen tippen.", "Consejo: abre una receta y pulsa Compartir con un amigo.", "Suggerimento: apri una ricetta e tocca Condividi con un amico.", "Tip: open een recept en tik Delen met een vriend.", "Dica: abre uma receita e toca Partilhar com um amigo.", "Wskazówka: otwórz przepis i tapnij Udostępnij znajomemu."],
   "recipe.share.cta": ["Partager", "Share", "Teilen", "Compartir", "Condividi", "Delen", "Partilhar", "Udostępnij"],
   "recipe.share.title": ["Partager avec un ami", "Share with a friend", "Mit Freund teilen", "Compartir con un amigo", "Condividi con un amico", "Delen met een vriend", "Partilhar com um amigo", "Udostępnij znajomemu"],
