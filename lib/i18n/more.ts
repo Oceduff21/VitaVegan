@@ -2857,6 +2857,33 @@
   "remind.shopping": ["Pense à ta liste de courses.", "Check your shopping list.", "Check your shopping list.", "Check your shopping list.", "Check your shopping list.", "Check your shopping list.", "Check your shopping list.", "Check your shopping list."],
   "remind.leafTier": ["Tu approches du prochain niveau feuille.", "You’re close to the next leaf tier.", "You’re close to the next leaf tier.", "You’re close to the next leaf tier.", "You’re close to the next leaf tier.", "You’re close to the next leaf tier.", "You’re close to the next leaf tier.", "You’re close to the next leaf tier."],
   "remind.leafShop": ["Assez de points pour la boutique feuille ?", "Enough points for the leaf shop?", "Enough points for the leaf shop?", "Enough points for the leaf shop?", "Enough points for the leaf shop?", "Enough points for the leaf shop?", "Enough points for the leaf shop?", "Enough points for the leaf shop?"],
+  "scan.needNameIngredients": [
+    "Indique un nom et la liste d’ingrédients (ou la composition).",
+    "Enter a name and the ingredients (or composition).",
+    "Name und Zutatenliste (oder Zusammensetzung) angeben.",
+    "Indica un nombre y la lista de ingredientes (o composición).",
+    "Indica un nome e la lista ingredienti (o composizione).",
+    "Vul een naam en de ingrediënten (of samenstelling) in.",
+    "Indica um nome e a lista de ingredientes (ou composição).",
+    "Podaj nazwę i listę składników (lub skład).",
+  ],
+  "scan.createDone": [
+    "Produit enregistré — tu peux scanner autre chose.",
+    "Product saved — you can scan something else.",
+    "Produkt gespeichert — du kannst weiter scannen.",
+    "Producto guardado — puedes escanear otra cosa.",
+    "Prodotto salvato — puoi scansionare altro.",
+    "Product opgeslagen — je kunt verder scannen.",
+    "Produto guardado — podes digitalizar outra coisa.",
+    "Produkt zapisany — możesz skanować dalej.",
+  ],
+  "game.correct": ["Correct !", "Correct!", "Richtig!", "¡Correcto!", "Corretto!", "Juist!", "Correto!", "Dobrze!"],
+  "game.wrong": ["Pas tout à fait", "Not quite", "Nicht ganz", "Casi", "Non proprio", "Niet helemaal", "Quase", "Niezupełnie"],
+  "game.next": ["Suivant", "Next", "Weiter", "Siguiente", "Avanti", "Volgende", "Seguinte", "Dalej"],
+  "game.again": ["Rejouer", "Play again", "Nochmal", "Otra vez", "Di nuovo", "Opnieuw", "Jogar de novo", "Jeszcze raz"],
+  "game.memory.moves": ["{n} coups", "{n} moves", "{n} Züge", "{n} movimientos", "{n} mosse", "{n} zetten", "{n} jogadas", "{n} ruchów"],
+  "game.memory.win": ["Bravo — trouvé en {n} coups !", "Nice — done in {n} moves!", "Super — in {n} Zügen!", "¡Bien — en {n} movimientos!", "Bravo — in {n} mosse!", "Goed — in {n} zetten!", "Boa — em {n} jogadas!", "Brawo — w {n} ruchach!"],
+  "game.memory.card": ["Carte face cachée", "Face-down card", "Verdeckte Karte", "Carta boca abajo", "Carta a faccia in giù", "Kaart dicht", "Carta virada", "Karta zakryta"],
 } as const;
 
 const LANG_INDEX = { fr: 0, en: 1, de: 2, es: 3, it: 4, nl: 5, pt: 6, pl: 7 } as const;

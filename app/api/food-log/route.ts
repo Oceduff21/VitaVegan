@@ -28,10 +28,10 @@ export async function GET() {
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ error: "Connecte-toi pour enregistrer un repas." }, { status: 401 });
+    return NextResponse.json({ error: "auth" }, { status: 401 });
   }
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!user) return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
+  if (!user) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!isPremium(user.role, user.trialEndsAt)) {
     return NextResponse.json({ error: "premium" }, { status: 402 });
   }

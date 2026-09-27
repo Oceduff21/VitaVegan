@@ -16,6 +16,7 @@ import { ReminderBanners } from "@/components/ReminderBanners";
 import { recipeLocale } from "@/lib/i18n/recipes";
 import { recipeCover } from "@/data/recipe-covers";
 import { ShortcutPills } from "@/components/ShortcutPills";
+import { RecipeCoverImg } from "@/components/recipes/RecipeCoverImg";
 import { lastLocalDays, localDate, formatFriendlyDay } from "@/lib/dates";
 import { gaugeLabel } from "@/lib/i18n/gauges";
 import { resolveLeafLevel } from "@/lib/leaf-rewards";
@@ -80,10 +81,11 @@ export default async function DashboardPage() {
             return (
               <li key={m.slug}>
                 <Link href={`/recettes/${m.slug}`} className="block overflow-hidden rounded-2xl bg-white">
-                  {cover ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={cover} alt={loc?.title ?? m.title} className="h-28 w-full object-cover" />
-                  ) : null}
+                  <RecipeCoverImg
+                    src={cover}
+                    alt={loc?.title ?? m.title}
+                    className="h-28 w-full object-cover"
+                  />
                   <div className="p-3">
                     <p className="font-medium">{loc?.title ?? m.title}</p>
                     <p className="text-xs text-ink/60">{loc?.summary ?? m.summary}</p>

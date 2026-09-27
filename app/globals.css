@@ -1111,6 +1111,17 @@ a.scan-barcode {
   color: #9b1c1c;
 }
 
+.recipe-cover-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 9rem;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgb(139 195 74 / 0.35), transparent 55%),
+    linear-gradient(145deg, #e8f5e1 0%, #fff7e8 48%, #d4e8c8 100%);
+  color: var(--forest, #1f4d3a);
+}
+
 .recipe-people {
   display: flex;
   flex-direction: column;

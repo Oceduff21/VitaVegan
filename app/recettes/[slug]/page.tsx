@@ -14,6 +14,7 @@ import { recipeHasAlcohol } from "@/data/official-recipes";
 import { parseGear, parseTasting, recipeServe } from "@/data/recipe-serve";
 import { parsePrefs } from "@/lib/profile";
 import { publicAuthor } from "@/lib/public-author";
+import { RecipeCoverImg } from "@/components/recipes/RecipeCoverImg";
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -71,10 +72,11 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ s
 
   return (
     <article className="flex flex-col gap-6">
-      {cover ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={cover} alt="" className="h-52 w-full rounded-3xl object-cover sm:h-72" />
-      ) : null}
+      <RecipeCoverImg
+        src={cover}
+        alt={title}
+        className="h-52 w-full rounded-3xl object-cover sm:h-72"
+      />
       <div>
         <p className="text-xs uppercase tracking-wide text-leaf">
           {t(`recipes.cat.${recipe.category}`)} · {recipe.timeMinutes} {t("recipes.min")} · {recipe.difficulty}

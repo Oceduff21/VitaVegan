@@ -12,6 +12,7 @@ import { resolveDailyNeeds } from "@/lib/nutrition/needs";
 import { localDate } from "@/lib/dates";
 import { isPremium } from "@/lib/entitlements";
 import { RecipeCard } from "@/components/recipes/RecipeCard";
+import { RecipeCoverImg } from "@/components/recipes/RecipeCoverImg";
 import { ChallengeCards } from "@/components/recipes/ChallengeCards";
 import {
   buildChallenges,
@@ -162,10 +163,11 @@ export async function RecipePulseBlocks() {
             href={`/recettes/${weekRecipe.slug}`}
             className="mt-4 flex flex-col overflow-hidden rounded-2xl bg-white lg:grid lg:grid-cols-[minmax(0,16rem)_1fr]"
           >
-            {weekRecipe.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={weekRecipe.image} alt="" className="h-40 w-full bg-sand object-cover lg:h-full lg:min-h-[12.5rem]" />
-            ) : null}
+            <RecipeCoverImg
+              src={weekRecipe.image}
+              alt={weekLoc?.title ?? weekRecipe.title}
+              className="h-40 w-full bg-sand object-cover lg:h-full lg:min-h-[12.5rem]"
+            />
             <div className="flex flex-col justify-center p-4 sm:p-5">
               <p className="text-xs uppercase tracking-wide text-leaf">{t(`recipes.cat.${weekRecipe.category}`) || weekRecipe.category}</p>
               <h3 className="mt-1 text-xl leading-snug sm:text-2xl">{weekLoc?.title ?? weekRecipe.title}</h3>

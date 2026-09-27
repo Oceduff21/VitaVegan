@@ -20,9 +20,12 @@ type Preview = {
 export function CreateProductForm({
   kind = "food",
   barcode = "",
+  onDone,
 }: {
   kind?: ArticleKind | "beauty";
   barcode?: string;
+  /** Close the create form / return to scan. */
+  onDone?: () => void;
 }) {
   const { t, locale } = useI18n();
   const [articleKind, setArticleKind] = useState<ArticleKind>(kind === "beauty" ? "cosmetic" : kind);
@@ -35,22 +38,44 @@ export function CreateProductForm({
   const [hits, setHits] = useState<IngredientHit[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   async function save() {
     setError(null);
-    const res = await fetch("/api/catalog", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind: articleKind, barcode: code, name, brand, image, ingredientsText: ingredients, lang: locale }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? t("scan.fail"));
+    if (!name.trim() || !ingredients.trim()) {
+      setError(t("scan.needNameIngredients"));
       return;
     }
-    setPreview({ analysis: data.analysis, score: data.score });
-    setHits(data.analysis.hits);
-    setSaved(true);
+    setBusy(true);
+    try {
+      const res = await fetch("/api/catalog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: articleKind,
+          barcode: code,
+          name,
+          brand,
+          image,
+          ingredientsText: ingredients,
+          lang: locale,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(
+          data.error === "name_ingredients" ? t("scan.needNameIngredients") : t("scan.fail"),
+        );
+        return;
+      }
+      setPreview({ analysis: data.analysis, score: data.score });
+      setHits(data.analysis.hits);
+      setSaved(true);
+    } catch {
+      setError(t("scan.fail"));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -64,6 +89,7 @@ export function CreateProductForm({
           value={articleKind}
           onChange={(e) => setArticleKind(e.target.value as ArticleKind)}
           className="min-h-12 rounded-full border border-forest/20 px-4"
+          disabled={saved}
         >
           {ARTICLE_KINDS.map((k) => (
             <option key={k} value={k}>
@@ -77,18 +103,21 @@ export function CreateProductForm({
         onChange={(e) => setName(e.target.value)}
         placeholder={t("scan.productName")}
         className="min-h-12 rounded-full border border-forest/20 px-4"
+        disabled={saved}
       />
       <input
         value={brand}
         onChange={(e) => setBrand(e.target.value)}
         placeholder={t("scan.brand")}
         className="min-h-12 rounded-full border border-forest/20 px-4"
+        disabled={saved}
       />
       <input
         value={code}
         onChange={(e) => setCode(e.target.value)}
         placeholder={t("scan.barcodePh")}
         className="min-h-12 rounded-full border border-forest/20 px-4"
+        disabled={saved}
       />
       <PhotoPicker label={t("scan.photoProduct")} value={image} onChange={setImage} />
       <IngredientsLabelScan onText={setIngredients} />
@@ -98,11 +127,19 @@ export function CreateProductForm({
         rows={5}
         placeholder={isEdible(articleKind) ? t("scan.ingredientsPh") : t("scan.composition")}
         className="field"
+        disabled={saved}
       />
       {error ? <p className="text-terracotta">{error}</p> : null}
-      <button type="button" onClick={() => void save()} className="min-h-12 rounded-full bg-forest text-cream">
-        {t("scan.saveProduct")}
-      </button>
+      {!saved ? (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void save()}
+          className="min-h-12 rounded-full bg-forest text-cream disabled:opacity-60"
+        >
+          {busy ? "…" : t("scan.saveProduct")}
+        </button>
+      ) : null}
       {preview ? (
         <div className="anim-card-in flex flex-col gap-2">
           <AnimalScore score={preview.score.score} />
@@ -117,7 +154,17 @@ export function CreateProductForm({
               )
             }
           />
-          {saved ? <p className="text-leaf">{t("scan.productSaved")}</p> : null}
+          {saved ? (
+            <>
+              <p className="text-leaf">{t("scan.productSaved")}</p>
+              <p className="text-sm text-ink/60">{t("scan.createDone")}</p>
+              {onDone ? (
+                <button type="button" className="btn btn-primary mt-1" onClick={onDone}>
+                  {t("scan.newScan")}
+                </button>
+              ) : null}
+            </>
+          ) : null}
         </div>
       ) : null}
     </div>

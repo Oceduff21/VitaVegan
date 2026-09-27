@@ -64,7 +64,16 @@ export function LogRecipeButton({
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
-        setError(data.error === "proof_comment" ? t("leaf.proofNeed") : t("scan.fail"));
+        const code = data.error;
+        setError(
+          code === "proof_comment"
+            ? t("leaf.proofNeed")
+            : code === "premium"
+              ? t("fav.locked")
+              : code === "auth"
+                ? t("recipes.reviewLogin")
+                : t("scan.fail"),
+        );
         return false;
       }
       const json = (await res.json()) as {

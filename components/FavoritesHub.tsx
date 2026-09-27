@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AnimalScore } from "@/components/score/AnimalScore";
 import { kindI18nKey } from "@/lib/article-kind";
 import { CompareVsLinks } from "@/components/CompareVsLinks";
+import { RecipeCoverImg } from "@/components/recipes/RecipeCoverImg";
 
 export type FavProduct = {
   kind: string;
@@ -64,10 +65,11 @@ function RecipeList({ items, empty }: { items: FavRecipe[]; empty: string }) {
       {items.map((r) => (
         <li key={r.slug}>
           <Link href={`/recettes/${r.slug}`} className="flex gap-3 overflow-hidden rounded-2xl bg-white">
-            {r.cover ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={r.cover} alt={r.title} className="h-20 w-20 shrink-0 object-cover sm:h-24 sm:w-24" />
-            ) : null}
+            <RecipeCoverImg
+              src={r.cover}
+              alt={r.title}
+              className="h-20 w-20 shrink-0 object-cover sm:h-24 sm:w-24"
+            />
             <div className="min-w-0 flex-1 py-2.5 pr-3">
               <p className="text-[0.65rem] uppercase tracking-wide text-leaf">{r.kicker}</p>
               <p className="truncate font-medium leading-snug">{r.title}</p>

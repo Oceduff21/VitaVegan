@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AnimalScore } from "@/components/score/AnimalScore";
+import { RecipeCoverImg } from "@/components/recipes/RecipeCoverImg";
 
 export function RecipeCard({
   href,
@@ -23,10 +24,7 @@ export function RecipeCard({
 }) {
   return (
     <Link href={href} className="overflow-hidden rounded-2xl bg-white">
-      {cover ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={cover} alt={title} className="h-36 w-full object-cover" />
-      ) : null}
+      <RecipeCoverImg src={cover} alt={title} className="h-36 w-full object-cover" />
       <div className="p-3.5 sm:p-5">
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-[0.65rem] uppercase tracking-wide text-leaf sm:text-xs">{kicker}</p>

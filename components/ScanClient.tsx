@@ -448,6 +448,12 @@ export function ScanClient({
         <CreateProductForm
           kind={kind === "beauty" ? "cosmetic" : isEdible(kind) ? "food" : kind}
           barcode={missingCode}
+          onDone={() => {
+            const code = missingCode;
+            setMissingCode(null);
+            setError(null);
+            void lookup(code);
+          }}
         />
       ) : null}
 

@@ -1,6 +1,18 @@
-/* VitaVegan — lightweight offline shell */
-const CACHE = "vitavegan-shell-v2";
-const SHELL = ["/", "/scan", "/cosmetiques", "/recettes", "/dashboard", "/academie", "/icon.svg", "/manifest.webmanifest"];
+/* Verdegan — lightweight offline shell */
+const CACHE = "verdegan-shell-v3";
+const SHELL = [
+  "/",
+  "/scan",
+  "/cosmetiques",
+  "/recettes",
+  "/dashboard",
+  "/academie",
+  "/icon.svg",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/apple-touch-icon.png",
+  "/manifest.webmanifest",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -35,13 +47,24 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
-  if (url.pathname === "/icon.svg" || url.pathname.endsWith(".webmanifest")) {
+  const path = url.pathname;
+  if (
+    path === "/icon.svg" ||
+    path === "/icon-192.png" ||
+    path === "/icon-512.png" ||
+    path === "/apple-touch-icon.png" ||
+    path.endsWith(".webmanifest")
+  ) {
     event.respondWith(
-      caches.match(req).then((cached) => cached || fetch(req).then((res) => {
-        const copy = res.clone();
-        void caches.open(CACHE).then((c) => c.put(req, copy));
-        return res;
-      })),
+      caches.match(req).then(
+        (cached) =>
+          cached ||
+          fetch(req).then((res) => {
+            const copy = res.clone();
+            void caches.open(CACHE).then((c) => c.put(req, copy));
+            return res;
+          }),
+      ),
     );
   }
 });

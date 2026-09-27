@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { isLocale, translate, type Locale } from "@/lib/i18n/dictionaries";
 import { LANG_COOKIE } from "@/lib/i18n/cookie";
 
@@ -19,7 +19,11 @@ const Ctx = createContext<I18n>({
 });
 
 function persist(locale: Locale) {
-  window.localStorage.setItem(STORAGE, locale);
+  try {
+    window.localStorage.setItem(STORAGE, locale);
+  } catch {
+    /* private mode */
+  }
   document.cookie = `${LANG_COOKIE}=${locale};path=/;max-age=31536000;samesite=lax`;
   document.documentElement.lang = locale;
 }
@@ -31,16 +35,29 @@ export function LanguageProvider({
   children: React.ReactNode;
   initialLocale?: Locale;
 }) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
+
+  useEffect(() => {
+    setLocaleState(initialLocale);
+    document.documentElement.lang = initialLocale;
+    try {
+      window.localStorage.setItem(STORAGE, initialLocale);
+    } catch {
+      /* private mode */
+    }
+  }, [initialLocale]);
+
   const value = useMemo<I18n>(
     () => ({
-      locale: initialLocale,
+      locale,
       setLocale: (l) => {
         if (!isLocale(l)) return;
         persist(l);
+        setLocaleState(l);
       },
-      t: (key) => translate(initialLocale, key),
+      t: (key) => translate(locale, key),
     }),
-    [initialLocale],
+    [locale],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
